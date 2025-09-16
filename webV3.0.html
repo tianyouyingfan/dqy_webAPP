@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>DND战斗辅助工具（本地版）V2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 离线交付时请将以下 CDN 改为本地 vendor/ 文件 -->
+    <script src="vendor/vue.global.prod.min.js"></script>
+    <script src="vendor/dexie.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f1012;
+            --panel: #15171a;
+            --card: #1b1e22;
+            --muted: #8b8f96;
+            --text: #e8eaed;
+            --accent: #d32f2f;
+            /* D&D Beyond 风格红 */
+            --accent-2: #ef5350;
+            --ok: #29b87e;
+            --warn: #ffb300;
+            --danger: #ef5350;
+            --radius: 12px;
+            --shadow: 0 10px 24px rgba(0, 0, 0, .35);
+            --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            --font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 15px
+        }
+
+        a {
+            color: var(--accent)
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(18, 20, 23, .95), rgba(18, 20, 23, .85));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid #23262a;
+        }
+
+        .topbar {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            letter-spacing: .3px
+        }
+
+        .brand .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .tab {
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #c9ccd1;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: transparent
+        }
+
+        .tab:not(.active):hover {
+            border-color: #2a2e34;
+            background: #1a1d21
+        }
+
+        .spacer {
+            flex: 1
+        }
+
+        .btn {
+            border: 1px solid #2a2e34;
+            background: #1a1d21;
+            color: #dfe3e7;
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .btn.ghost {
+            background: transparent
+        }
+
+        .btn.warn {
+            background: var(--warn);
+            border-color: var(--warn);
+            color: #111
+        }
+
+        .btn.ok {
+            background: var(--ok);
+            border-color: var(--ok);
+            color: #111
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed
+        }
+
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px;
+            flex: 1;
+            width: 100%
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px
+        }
+
+        .input,
+        select,
+        .chip {
+            background: #14171a;
+            border: 1px solid #2a2e34;
+            color: #dfe3e7;
+            border-radius: 10px;
+            padding: 8px 10px
+        }
+
+        .chip {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            cursor: pointer
+        }
+
+        .chip.active {
+            background: #28313a;
+            border-color: #3b4653
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px
+        }
+
+        .cards {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #2a2e34;
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: var(--shadow)
+        }
+
+        .card .title {
+            font-weight: 700
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .kpi {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .kpi .pill {
+            border: 1px solid #2a2e34;
+            background: #14171a;
+            padding: 4px 8px;
+            border-radius: 999px
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin: 14px 0 8px 0
+        }
+        summary.section-title {
+            cursor: pointer;
+            margin: 0; /* reset margin for summary */
+            padding: 6px 0;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .three-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px
+        }
+
+        .hl {
+            height: 1px;
+            background: #2a2e34;
+            margin: 12px 0
+        }
+
+        .mono {
+            font-family: var(--mono)
+        }
+
+        .tag {
+            display: inline-flex;
+            background: #2a2e34;
+            color: #cdd1d6;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 12px
+        }
+
+        /* Battle layout */
+        .battle {
+            display: grid;
+            grid-template-rows: 200px 1fr;
+            gap: 12px;
+            height: calc(100vh - 120px);
+        }
+
+        .initiative-bar {
+            background: var(--panel);
+            border: 1px solid #2a2e34;
+            border-radius: var(--radius);
+            padding: 10px;
+            overflow: auto;
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .init-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 190px;
+            background: #1a1d21;
+            border: 1px solid #2a2e34;
+            border-radius: 12px;
+            padding: 8px;
+            transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Add transition for smooth effect */
+        }
+
+        .init-tile.active-turn-highlight {
+            border-color: var(--accent); /* Highlight border with accent color */
+            box-shadow: 0 0 15px rgba(211, 47, 47, 0.6); /* Add a glow effect */
+        }
+
+        .init-header {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2a2e34;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .hp {
+            font-weight: 700
+        }
+
+        .statuses {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #28313a;
+            border: 1px solid #3b4653
+        }
+
+        .battle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            height: 100%
+        }
+
+        .pane {
+            background: var(--panel);
+            border: 1px solid #2a2e34;
+            border-radius: var(--radius);
+            padding: 12px;
+            overflow: auto
+        }
+
+        .actor-header {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .ability-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px
+        }
+
+        .ability {
+            background: #14171a;
+            border: 1px solid #2a2e34;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center
+        }
+
+        .actions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .target-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px
+        }
+
+        .target-card {
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #2a2e34;
+            background: #14171a
+        }
+
+        .target-card.selected {
+            outline: 2px solid var(--accent)
+        }
+
+        .drag-handle {
+            cursor: grab
+        }
+
+        .small {
+            font-size: 12px
+        }
+
+        .right {
+            margin-left: auto
+        }
+
+        .pill {
+            border: 1px solid #2a2e34;
+            background: #14171a;
+            padding: 4px 8px;
+            border-radius: 999px
+        }
+
+        .log {
+            font-family: var(--mono);
+            white-space: pre-wrap;
+            background: #0f1113;
+            border: 1px dashed #2a2e34;
+            border-radius: 8px;
+            padding: 8px;
+            color: #b6bac0
+        }
+
+        .sticky-toolbar {
+            position: sticky;
+            top: 8px;
+            z-index: 5;
+            background: linear-gradient(180deg, rgba(21, 23, 26, .98), rgba(21, 23, 26, .9));
+            backdrop-filter: blur(6px);
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #2a2e34
+        }
+
+        .danger-zone {
+            border: 1px dashed #543;
+            background: rgba(211, 47, 47, .05);
+            padding: 8px;
+            border-radius: 8px
+        }
+
+        .ok-zone {
+            border: 1px dashed #2a5;
+            background: rgba(41, 184, 126, .05);
+            padding: 8px;
+            border-radius: 8px
+        }
+
+        .placeholder {
+            padding: 12px;
+            border: 1px dashed #3a3f46;
+            border-radius: 10px;
+            background: #14171a;
+            color: #9aa0a6
+        }
+
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+.modal {
+    background: #15171a;
+    border: 1px solid #2a2e34;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 12px;
+    max-width: 720px;
+    width: 96%;
+    z-index: 51;
+    max-height: 90vh; /* 限制最大高度为视窗高度的90% */
+    overflow-y: auto; /* 当内容超出时，显示垂直滚动条 */
+}
+
+        .hscroll {
+            overflow: auto;
+            white-space: nowrap
+        }
+        .underline-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--muted);
+            border-radius: 0;
+            width: 100%;
+            padding: 4px 0;
+            color: var(--text);
+            font-family: var(--font);
+        }
+        .underline-input:focus {
+            outline: none;
+            border-bottom-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app" v-cloak>
+        <header>
+            <div class="topbar">
+                <div class="brand">
+                    <div class="dot"></div>
+                    <div>DND 战斗辅助工具 · 本地版 V2.0</div>
+                </div>
+                <nav class="tabs">
+                    <div class="tab" :class="{active: route==='monsters'}" @click="route='monsters'">怪物库</div>
+                    <div class="tab" :class="{active: route==='pcs'}" @click="route='pcs'">PC角色库</div>
+                    <div class="tab" :class="{active: route==='actions'}" @click="route='actions'">动作库</div>
+                    <div class="tab" :class="{active: route==='battle'}" @click="route='battle'">战斗</div>
+                    <div class="tab" :class="{active: route==='settings'}" @click="route='settings'">导入/导出</div>
+                </nav>
+                <div class="spacer"></div>
+                <button class="btn" @click="toggleTheme">切换主题</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- 怪物库列表页 -->
+            <section v-if="route==='monsters'">
+                <div class="toolbar">
+                    <input class="input" style="min-width:240px" v-model="monsterFilters.keyword" placeholder="按名称搜索..." />
+                    <select v-model="monsterFilters.cr" class="input">
+                        <option value="">CR（全部）</option>
+                        <option v-for="cr in crOptions" :key="cr" :value="cr">{{cr}}</option>
+                    </select>
+                    <div class="row">
+                        <span class="muted small">类型筛选：</span>
+                        <span v-for="t in monsterTypes" :key="t" class="chip" :class="{active: monsterFilters.types.includes(t)}" @click="toggleTypeFilter(t)">{{ translateType(t) }}</span>
+                    </div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="openMonsterEditor()">+ 新建怪物</button>
+                    <button class="btn" @click="openAbilityPool()">能力池</button>
+                    <button class="btn" @click="seedDemo">载入演示数据</button>
+                </div>
+
+                <div class="grid cards">
+                    <div class="card" v-for="m in filteredMonsters" :key="m.id">
+                        <div class="row">
+                            <div class="avatar" title="图像占位">🧟</div>
+                            <div class="title">{{m.name}}</div>
+                            <span class="pill right mono">CR {{m.cr}}</span>
+                        </div>
+                        <div class="kpi muted small" style="margin-top:6px">
+                            <span class="pill">AC {{m.ac}}</span>
+                            <span class="pill">HP {{m.hp?.average ?? m.hp ?? '—'}}</span>
+                            <span class="pill">{{(m.type||[]).map(translateType).join(', ') || '未分类'}}</span>
+                            <span class="pill" v-if="m.isCustom">自定义</span>
+                        </div>
+                        <div class="hl"></div>
+                        <div class="row">
+                            <button class="btn" @click="openMonsterEditor(m)">详情/伪编辑</button>
+                            <button class="btn" @click="addToBattleFromMonster(m)">加入战斗</button>
+                            <div class="spacer"></div>
+                            <button class="btn" @click="duplicateMonster(m)">复制</button>
+                            <button class="btn danger" @click="deleteMonster(m.id)">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PC 角色库 -->
+            <section v-if="route==='pcs'">
+                <div class="toolbar">
+                    <button class="btn" @click="openPCEditor()">+ 新建PC</button>
+                </div>
+                <div class="grid cards">
+                    <div class="card" v-for="pc in pcs" :key="pc.id">
+                        <div class="row">
+                            <div class="avatar">🧝</div>
+                            <div class="title">{{pc.name}}</div>
+                            <span class="pill right">AC {{pc.ac}}</span>
+                        </div>
+                        <div class="kpi muted small" style="margin-top:6px">
+                            <span class="pill">HP {{pc.hpCurrent}}/{{pc.hpMax}}</span>
+                            <span class="pill">敏 {{mod(pc.abilities.dex)}} 力 {{mod(pc.abilities.str)}} 体 {{mod(pc.abilities.con)}}</span>
+                        </div>
+                        <div class="hl"></div>
+                        <div class="row">
+                            <button class="btn" @click="openPCEditor(pc)">编辑</button>
+                            <button class="btn" @click="addToBattleFromPC(pc)">加入战斗</button>
+                            <div class="spacer"></div>
+                            <button class="btn danger" @click="deletePC(pc.id)">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 动作库 -->
+            <section v-if="route==='actions'">
+                <div class="toolbar">
+                    <button class="btn" @click="openActionEditor()">+ 新建动作</button>
+                </div>
+                <div class="grid cards">
+                    <div class="card" v-for="action in actions" :key="action.id">
+                        <div class="row">
+                            <div class="title">{{action.name}}</div>
+                            <span class="pill right">{{action.type}}</span>
+                        </div>
+                        <div class="kpi muted small" style="margin-top:6px">
+                            <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                            <span class="pill" v-if="action.damageDice">伤害 {{action.damageDice}} {{action.damageType}}</span>
+                            <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                        </div>
+                        <div class="hl"></div>
+                        <div class="row">
+                            <button class="btn" @click="openActionEditor(action)">编辑</button>
+                            <div class="spacer"></div>
+                            <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 战斗主界面（三区布局） -->
+            <section v-if="route==='battle'">
+                <div class="battle">
+                    <!-- 顶部先攻序列条（20%） -->
+                    <div class="initiative-bar hscroll" @dragover.prevent>
+                        <div v-for="(p, idx) in battle.participants" :key="p.uid"
+                             class="init-tile"
+                             :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid}"
+                             draggable="true" @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
+                            <div class="init-header">
+                                <div class="drag-handle" title="拖拽调整顺序">⠿</div>
+                                <div class="avatar">{{p.avatar || '🎯'}}</div>
+                                <div class="col">
+                                    <div style="font-weight:700">{{p.name}}</div>
+                                    <div class="small muted">先攻 {{p.initiativeRoll ?? '—'}} + {{p.initiativeModifier ?? '—'}}</div>
+                                </div>
+                                <div class="spacer"></div>
+                                <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
+                            </div>
+                            <div class="statuses">
+                                <span v-for="s in p.statuses" :key="s.id" class="status" :title="s.name + ' 剩余'+ s.rounds +'回合'">
+                                    {{s.icon || '⏳'}} {{s.name}} ({{s.rounds}})
+                                </span>
+                            </div>
+                            <div class="row">
+                                <button class="btn small" @click="setCurrentActor(p.uid)">设为当前</button>
+                                <button class="btn small" @click="removeParticipant(p.uid)">移除</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下方左右两侧（各50%） -->
+                    <div class="battle-grid">
+                        <!-- 左：当前行动者详情 -->
+                        <div class="pane">
+                            <div class="sticky-toolbar row">
+                                <button class="btn" @click="promptAddParticipants()">+ 添加单位</button>
+                                <button class="btn" @click="rollInitiative()">掷先攻</button>
+                                <button class="btn" @click="prevTurn()">上一个</button>
+                                <button class="btn primary" @click="nextTurn()">下一个</button>
+                                <span class="pill right">回合：{{battle.round}}</span>
+                            </div>
+                            <template v-if="currentActor">
+                                <div class="actor-header">
+                                    <div class="avatar" style="width:40px;height:40px;font-size:20px">{{currentActor.avatar || '🎯'}}</div>
+                                    <div class="col">
+                                        <div class="title">{{currentActor.name}}</div>
+                                        <div class="muted small">AC {{currentActor.ac}} · HP {{currentActor.hpCurrent}}/{{currentActor.hpMax}}</div>
+                                    </div>
+                                    <div class="spacer"></div>
+                                    <div class="row">
+                                        <input class="input small mono" style="width:120px" v-model.number="hpDelta" placeholder="+/-HP">
+                                        <button class="btn small" @click="applyHPDelta(currentActor, hpDelta)">应用</button>
+                                        <button class="btn small" @click="applyHPDelta(currentActor, Math.floor(hpDelta/2))">半伤</button>
+                                        <button class="btn small" @click="applyHPDelta(currentActor, hpDelta*2)">双倍</button>
+                                        <button class="btn small ok" @click="applyHPDelta(currentActor, Math.abs(hpDelta))">治疗</button>
+                                    </div>
+                                </div>
+
+                                <div class="hl"></div>
+                                <div class="section-title">六大属性</div>
+                                <div class="ability-grid">
+                                    <div class="ability" v-for="(v,k) in currentActor.abilities" :key="k">
+                                        <div class="muted small">{{k.toUpperCase()}}</div>
+                                        <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                    </div>
+                                </div>
+
+                                <div class="hl"></div>
+                                <div class="section-title">动作/能力</div>
+                                <div class="actions-list">
+                                    <button class="btn" v-for="a in currentActor.actions || []" :key="a.id" @click="selectAction(a)" :disabled="a.cooldown > 0">
+                                        {{a.name}}
+                                        <span v-if="a.cooldown > 0" class="muted small">(冷却中 {{a.cooldown}})</span>
+                                        <span v-else class="muted small">({{a.type}})</span>
+                                    </button>
+                                    <span class="muted small" v-if="!currentActor.actions?.length">暂无动作（TODO：在怪物/PC编辑处添加动作）</span>
+                                </div>
+
+                                <template v-if="ui.selectedAction">
+                                    <div class="hl"></div>
+                                    <div class="row">
+                                        <div class="section-title">自动化攻击流程</div>
+                                        <span class="pill">模式</span>
+                                        <select class="input" v-model="ui.rollMode">
+                                            <option value="normal">无</option>
+                                            <option value="adv">优势</option>
+                                            <option value="dis">劣势</option>
+                                        </select>
+                                        <span class="pill">自动扣血</span>
+                                        <input type="checkbox" v-model="ui.autoApplyDamage">
+                                        <div class="spacer"></div>
+                                        <button class="btn" @click="runAction()">执行 {{ui.selectedAction.name}}</button>
+                                        <button class="btn ghost" @click="ui.selectedAction=null">取消</button>
+                                    </div>
+                                    <div class="row small muted">提示：在右侧战场总览面板中多选目标</div>
+                                    <div class="hl"></div>
+                                    <div class="log" style="min-height:100px">{{ui.log || '战斗日志将显示于此'}}</div>
+                                </template>
+
+                                <div class="hl"></div>
+                                <div class="section-title">状态管理</div>
+                                <div class="row">
+                                    <button class="btn" @click="openStatusPicker(currentActor)">+ 施加状态</button>
+                                    <div class="spacer"></div>
+                                    <span class="muted small">状态到期后将自动移除（回合开始时结算）</span>
+                                </div>
+                                <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+                                    <span v-for="s in currentActor.statuses" :key="s.id" class="status">
+                                        {{s.icon || '⏳'}} {{s.name}} ({{s.rounds}})
+                                        <button class="btn small ghost" @click="removeStatus(currentActor, s.id)">移除</button>
+                                    </span>
+                                </div>
+                            </template>
+                            <div v-else class="placeholder">请选择或添加行动者</div>
+                        </div>
+
+                        <!-- 右：战场总览 -->
+                        <div class="pane">
+                            <div class="row">
+                                <div class="section-title">战场总览 · 目标选择器</div>
+                                <div class="spacer"></div>
+                                <button class="btn" @click="selectNone()">清除选择</button>
+                            </div>
+                            <div class="hl"></div>
+                            <div class="target-grid">
+                                <div class="target-card" v-for="g in groupedParticipants" :key="g.groupName">
+                                    <div class="row">
+                                        <div class="title">{{g.groupName}}</div>
+                                        <div class="spacer"></div>
+                                        <button class="btn small" @click="toggleSelectGroup(g)">选择组</button>
+                                    </div>
+                                    <div class="hl"></div>
+                                    <div class="grid" style="grid-template-columns:repeat( auto-fill, minmax(180px, 1fr));gap:6px">
+                                        <div v-for="p in g.members" :key="p.uid" class="target-card" :class="{selected: ui.selectedTargets.includes(p.uid)}" @click="toggleTarget(p.uid)">
+                                            <div class="row">
+                                                <div class="avatar">{{p.avatar || '🎯'}}</div>
+                                                <div class="col">
+                                                    <div style="font-weight:700">{{p.name}}</div>
+                                                    <div class="small muted">AC {{p.ac}}</div>
+                                                </div>
+                                                <div class="spacer"></div>
+                                                <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
+                                            </div>
+                                            <div class="row small muted" style="margin-top:4px">
+                                                <span class="pill">先攻 {{p.initiative ?? '—'}}</span>
+                                                <span class="pill">{{p.type}}</span>
+                                            </div>
+                                            <div class="row" style="margin-top:6px">
+                                                <input class="input small mono" style="width:90px" v-model.number="p._hpDelta" placeholder="+/-HP">
+                                                <button class="btn small" @click.stop="applyHPDelta(p, p._hpDelta)">应用</button>
+                                                <button class="btn small" @click.stop="applyHPDelta(p, Math.floor((p._hpDelta||0)/2))">半伤</button>
+                                                <button class="btn small" @click.stop="applyHPDelta(p, (p._hpDelta||0)*2)">双倍</button>
+                                                <button class="btn small ok" @click.stop="applyHPDelta(p, Math.abs(p._hpDelta||0))">治疗</button>
+                                            </div>
+                                            <div class="row" style="margin-top:6px">
+                                                <button class="btn small" @click.stop="openStatusPicker(p)">+ 状态</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="hl"></div>
+                            <div class="danger-zone small">
+                                TODO：战场整体标记/手动分组与重命名管理交互增强（目前按同名自动成组，可在单位详情重命名分组）
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 导入/导出 -->
+            <section v-if="route==='settings'">
+                <div class="card">
+                    <div class="section-title">数据导入/导出（JSON，全量）</div>
+                    <div class="row">
+                        <button class="btn" @click="exportAll()">导出全部数据</button>
+                        <input type="file" ref="file" accept="application/json" @change="importAll" hidden>
+                        <button class="btn" @click="$refs.file.click()">导入数据</button>
+                        <div class="spacer"></div>
+                        <span class="muted">所有数据均存储于浏览器 IndexedDB，支持离线使用</span>
+                    </div>
+                </div>
+                <div class="hl"></div>
+                <div class="card">
+                    <div class="section-title">项目说明/占位</div>
+                    <div class="placeholder">
+                        - TODO：完整的《怪物图鉴》样式排版（按官方风格）<br>
+                        - TODO：CR 一键调整算法细节完善与“伤害/轮”反算伤害骰<br>
+                        - TODO：更丰富的状态图标与说明、悬浮提示<br>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 模态：怪物编辑器 -->
+        <div class="modal-mask" v-if="ui.monsterEditor.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">怪物详情/编辑器</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.monsterEditor.mode = ui.monsterEditor.mode === 'view' ? 'edit' : 'view'">
+                        {{ ui.monsterEditor.mode === 'view' ? '切换到编辑模式' : '切换到查看模式' }}
+                    </button>
+                    <button class="btn" @click="ui.monsterEditor.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+
+                <!-- 查看模式 -->
+                <div v-if="ui.monsterEditor.mode === 'view'">
+                    <div class="placeholder">
+                        怪物数据只读视图占位符。
+                        <br>名称: {{ uiState.monsterDraft.name }}
+                        <br>CR: {{ uiState.monsterDraft.cr }}
+                        <br>AC: {{ uiState.monsterDraft.ac }}
+                        <br>HP: {{ uiState.monsterDraft.hp.average }}
+                        <br>... 更多数据待填充 ...
+                    </div>
+                </div>
+
+                <!-- 编辑模式 -->
+                <div v-if="ui.monsterEditor.mode === 'edit'">
+                    <div class="two-col">
+                        <div class="col">
+                            <label>名称</label>
+                            <input class="input" v-model="uiState.monsterDraft.name" placeholder="例如：哥布林" />
+                        </div>
+                        <div class="col">
+                            <label>CR</label>
+                            <input type="number" step="0.5" class="input" v-model.number="uiState.monsterDraft.cr" />
+                        </div>
+                        <div class="col">
+                            <label>类型（多选逗号分隔）</label>
+                            <input class="input" v-model="monsterTypesStr" placeholder="例如：humanoid, goblinoid" />
+                        </div>
+                        <div class="col">
+                            <label>AC</label>
+                            <input type="number" class="input" v-model.number="uiState.monsterDraft.ac" />
+                        </div>
+                        <div class="col">
+                            <label>HP 平均</label>
+                            <input type="number" class="input" v-model.number="uiState.monsterDraft.hp.average" />
+                        </div>
+                        <div class="col">
+                            <label>速度（步行）</label>
+                            <input type="number" class="input" v-model.number="uiState.monsterDraft.speed.walk" />
+                        </div>
+                    </div>
+
+                    <details open>
+                        <summary class="section-title">六大属性</summary>
+                        <div class="ability-grid" style="padding-top: 8px;">
+                            <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
+                                <div class="muted small">{{k.toUpperCase()}}</div>
+                                <input type="number" class="input" style="width:80px" v-model.number="uiState.monsterDraft.abilities[k]" />
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="hl"></div>
+                    <details>
+                        <summary class="section-title">抗性/易伤/免疫（伤害/状态）</summary>
+                        <div class="three-col" style="padding-top: 8px;">
+                            <div class="col">
+                                <label>抗性（伤害）</label>
+                                <input class="input" v-model="uiState.monsterDraft.resistances.damageStr" placeholder="cold, fire" />
+                            </div>
+                            <div class="col">
+                                <label>易伤（伤害）</label>
+                                <input class="input" v-model="uiState.monsterDraft.vulnerabilities.damageStr" placeholder="radiant" />
+                            </div>
+                            <div class="col">
+                                <label>免疫（伤害）</label>
+                                <input class="input" v-model="uiState.monsterDraft.immunities.damageStr" placeholder="poison" />
+                            </div>
+                            <div class="col">
+                                <label>免疫（状态）</label>
+                                <input class="input" v-model="uiState.monsterDraft.immunities.conditionsStr" placeholder="charmed, frightened" />
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="hl"></div>
+                    <details open>
+                        <summary class="section-title row">
+                            <span>特殊能力/动作</span>
+                            <div class="spacer"></div>
+                            <button v-if="uiState.monsterDraft.actions.length > 2" class="btn small" @click.prevent="openActionsViewer(uiState.monsterDraft, 'monster')">
+                                查看全部 ({{ uiState.monsterDraft.actions.length }})
+                            </button>
+                            <button class="btn small" @click.prevent="openActionPool()">从动作库添加</button>
+                            <button class="btn small" @click.prevent="openAbilityPool()">从能力池添加</button>
+                        </summary>
+                        <div class="grid" style="padding-top: 8px;" v-if="uiState.monsterDraft.actions.length <= 2">
+                                <div class="card" v-for="(a, idx) in uiState.monsterDraft.actions" :key="idx">
+                                <div class="row">
+                                    <input class="input" style="min-width:160px" v-model="a.name" placeholder="动作名称" />
+                                    <select class="input" v-model="a.type">
+                                        <option value="attack">攻击检定</option>
+                                        <option value="save">豁免检定</option>
+                                        <option value="utility">其他</option>
+                                    </select>
+                                    <span class="pill">充能</span>
+                                    <input type="number" class="input" style="width:80px" v-model.number="a.recharge" placeholder="0" />
+                                    <div class="spacer"></div>
+                                    <button class="btn danger" @click="uiState.monsterDraft.actions.splice(idx,1)">删除</button>
+                                </div>
+                                <div class="row small">
+                                    <template v-if="a.type==='attack'">
+                                        <span class="pill">攻击加值</span>
+                                        <input type="number" class="input" style="width:90px" v-model.number="a.attackBonus" />
+                                        <span class="pill">伤害</span>
+                                        <input class="input mono" style="width:120px" v-model="a.damageDice" placeholder="例如 2d6+3" />
+                                        <select class="input" v-model="a.damageType">
+                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                        </select>
+                                    </template>
+                                    <template v-else-if="a.type==='save'">
+                                        <span class="pill">豁免属性</span>
+                                        <select class="input" v-model="a.saveAbility">
+                                            <option>str</option>
+                                            <option>dex</option>
+                                            <option>con</option>
+                                            <option>int</option>
+                                            <option>wis</option>
+                                            <option>cha</option>
+                                        </select>
+                                        <span class="pill">DC</span>
+                                        <input type="number" class="input" style="width:90px" v-model.number="a.saveDC" />
+                                        <span class="pill">伤害</span>
+                                        <input class="input mono" style="width:120px" v-model="a.damageDice" placeholder="2d6+3" />
+                                        <select class="input" v-model="a.damageType">
+                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                        </select>
+                                        <span class="pill">成功是否半伤</span>
+                                        <select class="input" v-model="a.onSuccess">
+                                            <option value="half">半伤</option>
+                                            <option value="none">免疫</option>
+                                        </select>
+                                    </template>
+                                    <template v-else>
+                                        <span class="muted">实用动作，无自动结算</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn" @click="uiState.monsterDraft.actions.push({name:'新动作', type:'attack', attackBonus:0, damageDice:'1d6', damageType:'斩击', recharge: 0})" style="margin-top: 8px;" v-if="uiState.monsterDraft.actions.length <= 2">+ 添加动作</button>
+                    </details>
+
+                    <div class="hl"></div>
+                    <details>
+                        <summary class="section-title">CR 一键调整</summary>
+                        <div class="row" style="padding-top: 8px;">
+                            <input type="number" step="0.5" class="input" style="width:120px" v-model.number="uiState.targetCR" placeholder="目标CR">
+                            <button class="btn" @click="autoAdjustCR()">调整</button>
+                        </div>
+                        <div class="danger-zone small" style="margin-top: 8px;">
+                            TODO：完善“智能CR调整算法”映射规则与范围值随机生成、根据伤害/轮反算伤害骰。目前为占位简化实现，便于后续替换。
+                        </div>
+                    </details>
+                </div>
+
+                <div class="hl"></div>
+                <div class="row">
+                    <button class="btn ok" @click="saveMonsterAsCustom()">保存并关闭</button>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="addToBattleFromEditor(uiState.monsterDraft, 'monster')">加入战斗并关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：能力池 -->
+        <div class="modal-mask" v-if="ui.abilityPool.open" :style="{ zIndex: ui.abilityPool.nested ? 60 : 50 }">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">特殊能力库</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.abilityPool.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="toolbar">
+                    <input class="input" placeholder="搜索能力..." v-model="ui.abilityPool.keyword" />
+                    <button class="btn" @click="openAbilityEditor()">+ 新能力</button>
+                </div>
+                <div class="grid cards">
+                    <div class="card" v-for="ab in filteredAbilities" :key="ab.id">
+                        <div class="row">
+                            <div class="title">{{ab.name}}</div>
+                            <div class="spacer"></div>
+                            <button class="btn" @click="attachAbilityToDraft(ab)">添加到当前怪物</button>
+                            <button class="btn" @click="openAbilityEditor(ab)">编辑</button>
+                            <button class="btn danger" @click="deleteAbility(ab.id)">删除</button>
+                        </div>
+                        <div class="muted small" style="margin-top:6px">{{ab.description}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：动作库 -->
+        <div class="modal-mask" v-if="ui.actionPool.open" :style="{ zIndex: ui.actionPool.nested ? 60 : 50 }">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">动作库</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.actionPool.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="toolbar">
+                    <input class="input" placeholder="搜索动作..." v-model="ui.actionPool.keyword" />
+                    <button class="btn" @click="openActionEditor()">+ 新动作</button>
+                </div>
+                <div class="grid cards">
+                    <div class="card" v-for="action in filteredActions" :key="action.id">
+                        <div class="row">
+                            <div class="title">{{action.name}}</div>
+                            <span class="pill right">{{action.type}}</span>
+                        </div>
+                        <div class="kpi muted small" style="margin-top:6px">
+                            <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                            <span class="pill" v-if="action.damageDice">伤害 {{action.damageDice}} {{action.damageType}}</span>
+                            <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                        </div>
+                        <div class="hl"></div>
+                        <div class="row">
+                            <button class="btn" @click="attachActionToDraft(action)">添加到当前生物</button>
+                            <button class="btn" @click="openActionEditor(action)">编辑</button>
+                            <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：能力编辑 -->
+        <div class="modal-mask" v-if="ui.abilityEditor.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">编辑能力</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.abilityEditor.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="col">
+                    <label>名称</label>
+                    <input class="input" v-model="uiState.abilityDraft.name" />
+                    <label>描述</label>
+                    <textarea class="input" rows="4" v-model="uiState.abilityDraft.description" placeholder="能力说明..."></textarea>
+                    <div class="hl"></div>
+                    <button class="btn ok" @click="saveAbility()">保存并关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：PC 编辑 -->
+        <div class="modal-mask" v-if="ui.pcEditor.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">PC 角色编辑</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.pcEditor.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="two-col">
+                    <div class="col"><label>名称</label><input class="input" v-model="uiState.pcDraft.name" /></div>
+                    <div class="col"><label>AC</label><input type="number" class="input" v-model.number="uiState.pcDraft.ac" /></div>
+                    <div class="col"><label>HP 最大</label><input type="number" class="input" v-model.number="uiState.pcDraft.hpMax" /></div>
+                    <div class="col"><label>HP 当前</label><input type="number" class="input" v-model.number="uiState.pcDraft.hpCurrent" /></div>
+                </div>
+                <div class="section-title">六大属性</div>
+                <div class="ability-grid">
+                    <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
+                        <div class="muted small">{{k.toUpperCase()}}</div>
+                        <input type="number" class="input" style="width:80px" v-model.number="uiState.pcDraft.abilities[k]" />
+                    </div>
+                </div>
+                <div class="section-title row">
+                    <span>特性</span>
+                </div>
+                <textarea class="input underline-input" rows="3" v-model="uiState.pcDraft.features" placeholder="输入角色的特性、背景、关键信息等..."></textarea>
+
+                <div class="section-title row">
+                    <span>动作</span>
+                    <div class="spacer"></div>
+                    <button v-if="uiState.pcDraft.actions.length > 2" class="btn small" @click.prevent="openActionsViewer(uiState.pcDraft, 'pc')">
+                        查看全部 ({{ uiState.pcDraft.actions.length }})
+                    </button>
+                    <button class="btn small" @click.prevent="openActionPool()">从动作库添加</button>
+                </div>
+                <div class="grid" style="padding-top: 8px;" v-if="uiState.pcDraft.actions.length <= 2">
+                    <div class="card" v-for="(a, idx) in uiState.pcDraft.actions" :key="idx">
+                        <div class="row">
+                            <div class="title">{{a.name}}</div>
+                            <span class="pill right">{{a.type}}</span>
+                            <div class="spacer"></div>
+                            <button class="btn danger" @click="uiState.pcDraft.actions.splice(idx,1)">删除</button>
+                        </div>
+                        <div class="kpi muted small" style="margin-top:6px">
+                            <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
+                            <span class="pill" v-if="a.damageDice">伤害 {{a.damageDice}} {{a.damageType}}</span>
+                            <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
+                        </div>
+                    </div>
+                    <div v-if="!uiState.pcDraft.actions?.length" class="placeholder small">该角色暂无动作</div>
+                </div>
+
+                <div class="hl"></div>
+                <div class="row">
+                    <button class="btn ok" @click="savePC()">保存并关闭</button>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：动作编辑 -->
+        <div class="modal-mask" v-if="ui.actionEditor.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">编辑动作</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.actionEditor.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="col">
+                    <div class="row">
+                        <div class="col">
+                            <label>动作名称</label>
+                            <input class="input" style="min-width:160px" v-model="uiState.actionDraft.name" placeholder="动作名称" />
+                        </div>
+                        <div class="col">
+                            <label>类型</label>
+                            <select class="input" v-model="uiState.actionDraft.type">
+                                <option value="attack">攻击检定</option>
+                                <option value="save">豁免检定</option>
+                                <option value="utility">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hl"></div>
+                    <div class="row small" style="gap:12px">
+                        <template v-if="uiState.actionDraft.type==='attack'">
+                            <div class="col">
+                                <label>攻击加值</label>
+                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.attackBonus" />
+                            </div>
+                            <div class="col">
+                                <label>伤害骰</label>
+                                <input class="input mono" style="width:120px" v-model="uiState.actionDraft.damageDice" placeholder="例如 2d6+3" />
+                            </div>
+                             <div class="col">
+                                <label>伤害类型</label>
+                                <select class="input" v-model="uiState.actionDraft.damageType">
+                                    <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label>充能回合</label>
+                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                            </div>
+                            <div class="col">
+                                <label>命中附加状态</label>
+                                <select class="input" v-model="uiState.actionDraft.onHitStatus">
+                                    <option value="">无</option>
+                                    <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
+                                </select>
+                                <div v-if="uiState.actionDraft.onHitStatus" class="form-row">
+                                  <label>
+                                    豁免属性:
+                                    <select v-model="uiState.actionDraft.onHitSaveAbility">
+                                      <option value="str">力量 (Strength)</option>
+                                      <option value="dex">敏捷 (Dexterity)</option>
+                                      <option value="con">体质 (Constitution)</option>
+                                      <option value="int">智力 (Intelligence)</option>
+                                      <option value="wis">感知 (Wisdom)</option>
+                                      <option value="cha">魅力 (Charisma)</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    豁免DC:
+                                    <input type="number" v-model.number="uiState.actionDraft.onHitSaveDC" style="width: 60px;">
+                                  </label>
+                                </div>
+                            </div>
+                            <div class="col" v-if="uiState.actionDraft.onHitStatus">
+                                <label>状态持续回合</label>
+                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.onHitStatusRounds" placeholder="默认1" />
+                            </div>
+                        </template>
+                        <template v-else-if="uiState.actionDraft.type==='save'">
+                            <div class="col">
+                                <label>豁免属性</label>
+                                <select class="input" v-model="uiState.actionDraft.saveAbility">
+                                    <option>str</option>
+                                    <option>dex</option>
+                                    <option>con</option>
+                                    <option>int</option>
+                                    <option>wis</option>
+                                    <option>cha</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label>DC</label>
+                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.saveDC" />
+                            </div>
+                            <div class="col">
+                                <label>伤害骰</label>
+                                <input class="input mono" style="width:120px" v-model="uiState.actionDraft.damageDice" placeholder="2d6+3" />
+                            </div>
+                            <div class="col">
+                                <label>伤害类型</label>
+                                <select class="input" v-model="uiState.actionDraft.damageType">
+                                    <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label>充能回合</label>
+                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                            </div>
+                            <div class="col">
+                                <label>成功是否半伤</label>
+                                <select class="input" v-model="uiState.actionDraft.onSuccess">
+                                    <option value="half">半伤</option>
+                                    <option value="none">免疫</option>
+                                </select>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <span class="muted">实用动作，无自动结算</span>
+                        </template>
+                    </div>
+                    <div class="hl"></div>
+                    <button class="btn ok" @click="saveAction()">保存并关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：状态选择器 -->
+        <div class="modal-mask" v-if="ui.statusPicker.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">施加状态</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.statusPicker.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="row">
+                    <select class="input" v-model="ui.statusPicker.selectedName">
+                        <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
+                    </select>
+                    <input type="number" class="input" style="width:120px" v-model.number="ui.statusPicker.rounds" placeholder="持续回合数">
+                    <input class="input" style="width:120px" v-model="ui.statusPicker.icon" placeholder="图标(emoji 可)">
+                    <button class="btn ok" @click="applyStatus()">应用</button>
+                </div>
+                <div class="ok-zone small" style="margin-top:8px">
+                    已支持自动追踪状态时长，每到回合开始自动 -1，至 0 自动移除。也可手动移除或调整。
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：添加参战单位 -->
+        <div class="modal-mask" v-if="ui.addParticipants.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">添加参战单位</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.addParticipants.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="two-col">
+                    <div>
+                        <div class="section-title">从怪物库添加</div>
+                        <input class="input" placeholder="搜索怪物..." v-model="ui.addParticipants.keywordM" />
+                        <div class="grid" style="margin-top:8px;max-height:260px;overflow:auto">
+                            <div class="row" v-for="m in monsters.filter(x=>!ui.addParticipants.keywordM || x.name.includes(ui.addParticipants.keywordM))" :key="m.id">
+                                <span>{{m.name}} <span class="muted small">CR {{m.cr}}</span></span>
+                                <div class="spacer"></div>
+                                <input type="number" class="input small" style="width:90px" v-model.number="m._addCount" placeholder="数量">
+                                <button class="btn small" @click="addParticipantsFromMonster(m, m._addCount||1)">添加</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="section-title">从PC库添加</div>
+                        <input class="input" placeholder="搜索PC..." v-model="ui.addParticipants.keywordP" />
+                        <div class="grid" style="margin-top:8px;max-height:260px;overflow:auto">
+                            <div class="row" v-for="pc in pcs.filter(x=>!ui.addParticipants.keywordP || x.name.includes(ui.addParticipants.keywordP))" :key="pc.id">
+                                <span>{{pc.name}}</span>
+                                <div class="spacer"></div>
+                                <button class="btn small" @click="addParticipantsFromPC(pc)">添加</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hl"></div>
+                <div class="ok-zone small">提示：同名怪物会自动分组。你也可以在单位上手动设定 groupName。</div>
+            </div>
+        </div>
+
+        <!-- 模态：豁免检定 -->
+        <div v-if="ui.saveCheck.open" class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+              <div class="modal-header">
+                <h3>豁免检定</h3>
+              </div>
+              <div class="modal-body">
+                <p>目标 <strong>{{ ui.saveCheck.targetName }}</strong> 需要进行一次 <strong>DC {{ ui.saveCheck.dc }}</strong> 的 <strong>{{ ui.saveCheck.ability.toUpperCase() }}</strong> 豁免检定。</p>
+                <p>请投掷d20并加上目标的豁免调整值。</p>
+              </div>
+              <div class="modal-footer">
+                <button class="modal-default-button" @click="() => { ui.saveCheck.callback(true); ui.saveCheck.open = false; }">
+                  豁免成功
+                </button>
+                <button class="modal-default-button" @click="() => { ui.saveCheck.callback(false); ui.saveCheck.open = false; }">
+                  豁免失败
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 模态：动作管理 -->
+        <div class="modal-mask" v-if="ui.actionsViewer.open" style="z-index: 55;">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">{{ ui.actionsViewer.title }}</div>
+                    <div class="spacer"></div>
+                </div>
+                <div class="hl"></div>
+                <div class="pane" style="max-height: 60vh; overflow-y: auto; background: var(--bg); padding: 8px;">
+                    <div class="grid cards">
+                        <div class="card" v-for="(a, idx) in ui.actionsViewer.draft.actions" :key="idx">
+                            <div class="row">
+                                <div class="title">{{a.name}}</div>
+                                <span class="pill right">{{a.type}}</span>
+                                <div class="spacer"></div>
+                                <button class="btn danger" @click="ui.actionsViewer.draft.actions.splice(idx,1)">删除</button>
+                            </div>
+                            <div class="kpi muted small" style="margin-top:6px">
+                                <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
+                                <span class="pill" v-if="a.damageDice">伤害 {{a.damageDice}} {{a.damageType}}</span>
+                                <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
+                            </div>
+                        </div>
+                        <div v-if="!ui.actionsViewer.draft.actions?.length" class="placeholder small">暂无动作</div>
+                    </div>
+                </div>
+                <div class="hl"></div>
+                <div class="row">
+                    <button class="btn" @click="openActionPool()">从动作库添加</button>
+                    <button class="btn" @click="openAbilityPool()">从能力池添加</button>
+                    <div class="spacer"></div>
+                    <button class="btn ok" @click="ui.actionsViewer.open = false">完成并关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const {
+            createApp,
+            reactive,
+            ref,
+            computed,
+            watch
+        } = Vue;
+
+        // Dexie 初始化
+        const db = new Dexie('dnd-assist-v2');
+        db.version(2).stores({
+            monsters: '++id, name, cr, isCustom',
+            abilities: '++id, name',
+            pcs: '++id, name',
+            actions: '++id, name, type, onHitStatus, onHitStatusRounds, onHitSaveAbility, onHitSaveDC',
+        });
+
+        async function seedIfEmpty() {
+            const count = await db.monsters.count();
+            if (count > 0) return;
+            await db.abilities.bulkAdd([{
+                name: '再生',
+                description: '每回合开始时回复若干生命值。'
+            }, {
+                name: '敏捷闪避',
+                description: '在可见来源的范围效果伤害上掷成功时不受伤，失败时只受半伤。'
+            }, ]);
+            const actionCount = await db.actions.count();
+            if (actionCount === 0) {
+                await db.actions.bulkAdd([
+                    { name: '弯刀 (attack)', type: 'attack', attackBonus: 4, damageDice: '1d6+2', damageType: '斩击' },
+                    { name: '短弓 (attack)', type: 'attack', attackBonus: 4, damageDice: '1d6+2', damageType: '穿刺' },
+                ]);
+            }
+            await db.monsters.bulkAdd([{
+                name: '哥布林',
+                cr: 0.25,
+                type: ['humanoid', 'goblinoid'],
+                ac: 15,
+                hp: {
+                    average: 7,
+                    roll: '2d6'
+                },
+                speed: {
+                    walk: 30
+                },
+                abilities: {
+                    str: 8,
+                    dex: 14,
+                    con: 10,
+                    int: 10,
+                    wis: 8,
+                    cha: 8
+                },
+                resistances: {
+                    damage: [],
+                    conditions: []
+                },
+                vulnerabilities: {
+                    damage: [],
+                    conditions: []
+                },
+                immunities: {
+                    damage: [],
+                    conditions: []
+                },
+                actions: [{
+                    id: crypto.randomUUID(),
+                    name: '弯刀',
+                    type: 'attack',
+                    attackBonus: 4,
+                    damageDice: '1d6+2',
+                    damageType: '斩击'
+                }, {
+                    id: crypto.randomUUID(),
+                    name: '短弓',
+                    type: 'attack',
+                    attackBonus: 4,
+                    damageDice: '1d6+2',
+                    damageType: '穿刺'
+                }, ],
+                isCustom: false
+            }, {
+                name: '食人魔',
+                cr: 2,
+                type: ['giant'],
+                ac: 11,
+                hp: {
+                    average: 59,
+                    roll: '7d10+21'
+                },
+                speed: {
+                    walk: 40
+                },
+                abilities: {
+                    str: 19,
+                    dex: 8,
+                    con: 16,
+                    int: 5,
+                    wis: 7,
+                    cha: 7
+                },
+                resistances: {
+                    damage: [],
+                    conditions: []
+                },
+                vulnerabilities: {
+                    damage: [],
+                    conditions: []
+                },
+                immunities: {
+                    damage: [],
+                    conditions: []
+                },
+                actions: [{
+                    id: crypto.randomUUID(),
+                    name: '巨棍',
+                    type: 'attack',
+                    attackBonus: 6,
+                    damageDice: '2d8+4',
+                    damageType: '钝击'
+                }, {
+                    id: crypto.randomUUID(),
+                    name: '标枪',
+                    type: 'attack',
+                    attackBonus: 6,
+                    damageDice: '2d6+4',
+                    damageType: '穿刺'
+                }, ],
+                isCustom: false
+            }, {
+                name: '成年红龙',
+                cr: 17,
+                type: ['dragon'],
+                ac: 19,
+                hp: {
+                    average: 256,
+                    roll: '19d12+133'
+                },
+                speed: {
+                    walk: 40,
+                    fly: 80
+                },
+                abilities: {
+                    str: 27,
+                    dex: 10,
+                    con: 25,
+                    int: 16,
+                    wis: 13,
+                    cha: 21
+                },
+                resistances: {
+                    damage: [],
+                    conditions: []
+                },
+                vulnerabilities: {
+                    damage: [],
+                    conditions: []
+                },
+                immunities: {
+                    damage: ['fire'],
+                    conditions: []
+                },
+                actions: [{
+                    id: crypto.randomUUID(),
+                    name: '咬击',
+                    type: 'attack',
+                    attackBonus: 14,
+                    damageDice: '2d10+8',
+                    damageType: '穿刺'
+                }, {
+                    id: crypto.randomUUID(),
+                    name: '吐息武器',
+                    type: 'save',
+                    saveAbility: 'dex',
+                    saveDC: 21,
+                    damageDice: '18d6',
+                    damageType: '火焰',
+                    onSuccess: 'half',
+                    recharge: 6,
+                }, ],
+                isCustom: false
+            }]);
+            await db.pcs.bulkAdd([{
+                name: '艾瑞克',
+                ac: 16,
+                hpMax: 32,
+                hpCurrent: 32,
+                abilities: {
+                    str: 16,
+                    dex: 12,
+                    con: 14,
+                    int: 10,
+                    wis: 10,
+                    cha: 12
+                },
+                actions: [],
+                features: '一名经验丰富的战士，忠诚可靠。'
+            }, {
+                name: '琳',
+                ac: 14,
+                hpMax: 24,
+                hpCurrent: 24,
+                abilities: {
+                    str: 8,
+                    dex: 16,
+                    con: 12,
+                    int: 14,
+                    wis: 12,
+                    cha: 10
+                },
+                actions: [],
+                features: '一位敏捷的游侠，擅长弓箭和野外生存。'
+            }, ]);
+        }
+
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+        // 工具函数
+        function abilityMod(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function rollD20(mode = 'normal') {
+            const r1 = Math.floor(Math.random() * 20) + 1;
+            if (mode === 'normal') return {
+                value: r1,
+                isCrit: r1 === 20,
+                isFumble: r1 === 1,
+                raw: [r1]
+            };
+            const r2 = Math.floor(Math.random() * 20) + 1;
+            const pick = mode === 'adv' ? Math.max(r1, r2) : Math.min(r1, r2);
+            return {
+                value: pick,
+                isCrit: pick === 20,
+                isFumble: pick === 1,
+                raw: [r1, r2]
+            };
+        }
+
+        function parseDiceExpr(expr) {
+            if (!expr) return { dice: [], flat: 0 };
+            const dice = [];
+            let flat = 0;
+            const parts = expr.replace(/-/g, '+-').split('+');
+            for (const part of parts) {
+                const trimmed = part.trim();
+                if (trimmed.includes('d')) {
+                    dice.push(trimmed);
+                } else if (trimmed) {
+                    flat += parseInt(trimmed, 10) || 0;
+                }
+            }
+            return { dice, flat };
+        }
+
+        function rollDamage(expr, isCrit = false, damageType = 'generic') {
+            if (!expr) return [{ amount: 0, type: damageType }];
+            
+            const { dice, flat } = parseDiceExpr(expr);
+            let total = flat;
+
+            for (const d of dice) {
+                const [countStr, facesStr] = d.toLowerCase().split('d');
+                const count = isCrit ? (parseInt(countStr, 10) || 1) * 2 : (parseInt(countStr, 10) || 1);
+                const faces = parseInt(facesStr, 10);
+                if (isNaN(faces)) continue;
+
+                for (let i = 0; i < count; i++) {
+                    total += Math.floor(Math.random() * faces) + 1;
+                }
+            }
+            
+            return [{ amount: Math.max(0, total), type: damageType }];
+        }
+
+        function formatDamageList(dl) {
+            return dl.map(x => `${x.amount} ${x.type}`).join(' + ') || '0';
+        }
+
+        function clamp(n, min, max) {
+            return Math.max(min, Math.min(max, n));
+        }
+
+        // 简化的 CR 自动调整占位（TODO：替换为正式规则表）
+        function adjustMonsterToCR(mon, targetCR) {
+            const out = deepClone(mon);
+            const cr = Number(targetCR) || mon.cr || 1;
+            // 非正式：以 CR 线性近似，作为占位
+            const scale = (cr) / (mon.cr || 1);
+            out.cr = cr;
+            out.ac = Math.round(clamp((mon.ac || 12) + (scale - 1) * 2, 8, 25));
+            const baseHP = mon.hp?.average ?? mon.hp ?? 10;
+            out.hp = {
+                average: Math.round(clamp(baseHP * scale, 5, 600)),
+                roll: mon.hp?.roll || ''
+            };
+            // 调整动作攻击加值与伤害骰（仅把伤害/轮提升为近似；骰子智能反算 TODO）
+            (out.actions || []).forEach(a => {
+                if (a.type === 'attack') {
+                    a.attackBonus = Math.round((a.attackBonus || 3) + (scale - 1) * 2);
+                    // 粗略伤害上调：额外 +Xd6
+                    a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(1, Math.round(1*scale))}d6`;
+                }
+                if (a.type === 'save') {
+                    a.saveDC = Math.round((a.saveDC || 12) + (scale - 1) * 2);
+                    a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(2, Math.round(2*scale))}d6`;
+                }
+            });
+            return out;
+        }
+
+        createApp({
+            setup() {
+                const route = ref('battle'); // 默认跳到战斗页便于看布局
+                const monsters = ref([]);
+                const abilities = ref([]);
+                const pcs = ref([]);
+                const actions = ref([]);
+                const monsterFilters = reactive({
+                    keyword: '',
+                    cr: '',
+                    types: []
+                });
+                const monsterTypes = ref(['aberration', 'beast', 'celestial', 'construct', 'dragon', 'elemental', 'fey', 'fiend', 'giant', 'humanoid', 'monstrosity', 'ooze', 'plant', 'undead', 'goblinoid']);
+                const damageTypes = ref(['钝击', '穿刺', '斩击', '火焰', '寒冷', '力场', '毒素', '酸性', '闪电', '心灵', '光耀', '死灵', '雷鸣']);
+                const monsterTypeTranslations = {
+                    'aberration': '异怪',
+                    'beast': '野兽',
+                    'celestial': '天界生物',
+                    'construct': '构装体',
+                    'dragon': '龙',
+                    'elemental': '元素',
+                    'fey': '精类',
+                    'fiend': '邪魔',
+                    'giant': '巨人',
+                    'humanoid': '人形生物',
+                    'monstrosity': '怪兽',
+                    'ooze': '泥怪',
+                    'plant': '植物',
+                    'undead': '不死生物',
+                    'goblinoid': '类哥布林'
+                };
+                const translateType = (t) => monsterTypeTranslations[t] || t;
+                const crOptions = ref(['0', '0.125', '0.25', '0.5', ...Array.from({
+                    length: 30
+                }, (_, i) => (i + 1).toString())]);
+                const battle = reactive({
+                    participants: [],
+                    currentIndex: 0,
+                    round: 1,
+                    dragIndex: null,
+                });
+                const ui = reactive({
+                    monsterEditor: {
+                        open: false,
+                        mode: 'edit', // 'view' or 'edit'
+                    },
+                    abilityPool: {
+                        open: false,
+                        keyword: '',
+                        nested: false
+                    },
+                    actionPool: {
+                        open: false,
+                        keyword: '',
+                        nested: false
+                    },
+                    actionsViewer: { 
+                        open: false, 
+                        draft: null, 
+                        title: '' 
+                    },
+                    saveCheck: {
+                      open: false,
+                      targetName: '',
+                      dc: 0,
+                      ability: '',
+                      callback: null
+                    },
+                    abilityEditor: {
+                        open: false
+                    },
+                    pcEditor: {
+                        open: false
+                    },
+                    activeEditor: null, // 'monster' or 'pc'
+                    actionEditor: {
+                        open: false
+                    },
+                    statusPicker: {
+                        open: false,
+                        targetUid: null,
+                        selectedName: '束缚 Restrained',
+                        rounds: 3,
+                        icon: '⛓️'
+                    },
+                    addParticipants: {
+                        open: false,
+                        keywordM: '',
+                        keywordP: ''
+                    },
+                    selectedAction: null,
+                    rollMode: 'normal',
+                    autoApplyDamage: true,
+                    selectedTargets: [],
+                    log: '',
+                });
+                const hpDelta = ref(5);
+                const currentActor = computed(() => battle.participants[battle.currentIndex] || null);
+                // 怪物编辑器草稿
+                const emptyMonster = () => ({
+                    name: '',
+                    cr: 1,
+                    type: [],
+                    ac: 12,
+                    hp: {
+                        average: 10,
+                        roll: '1d8+2'
+                    },
+                    speed: {
+                        walk: 30
+                    },
+                    abilities: {
+                        str: 10,
+                        dex: 10,
+                        con: 10,
+                        int: 10,
+                        wis: 10,
+                        cha: 10
+                    },
+                    resistances: {
+                        damage: [],
+                        conditions: []
+                    },
+                    vulnerabilities: {
+                        damage: [],
+                        conditions: []
+                    },
+                    immunities: {
+                        damage: [],
+                        conditions: []
+                    },
+                    actions: []
+                });
+                const uiState = reactive({
+                    monsterDraft: emptyMonster(),
+                    targetCR: null,
+                    abilityDraft: {
+                        name: '',
+                        description: ''
+                    },
+                    pcDraft: {
+                        name: '',
+                        ac: 14,
+                        hpMax: 20,
+                        hpCurrent: 20,
+                        abilities: {
+                            str: 10,
+                            dex: 10,
+                            con: 10,
+                            int: 10,
+                            wis: 10,
+                            cha: 10
+                        },
+                        actions: []
+                    },
+                    actionDraft: { name: '', type: 'attack', damageType: '斩击', recharge: 0 },
+                });
+                const monsterTypesStr = computed({
+                    get() {
+                        return (uiState.monsterDraft.type || []).join(', ');
+                    },
+                    set(v) {
+                        uiState.monsterDraft.type = (v || '').split(',').map(s => s.trim()).filter(Boolean);
+                    }
+                });
+                // 将逗号分隔的字符串视图字段与数组互转
+                function bindListStrings(draft) {
+                    draft.resistances.damageStr = (draft.resistances.damage || []).join(', ');
+                    draft.vulnerabilities.damageStr = (draft.vulnerabilities.damage || []).join(', ');
+                    draft.immunities.damageStr = (draft.immunities.damage || []).join(', ');
+                    draft.immunities.conditionsStr = (draft.immunities.conditions || []).join(', ');
+                }
+
+                function unbindListStrings(draft) {
+                    draft.resistances.damage = (draft.resistances.damageStr || '').split(',').map(s => s.trim()).filter(Boolean);
+                    draft.vulnerabilities.damage = (draft.vulnerabilities.damageStr || '').split(',').map(s => s.trim()).filter(Boolean);
+                    draft.immunities.damage = (draft.immunities.damageStr || '').split(',').map(s => s.trim()).filter(Boolean);
+                    draft.immunities.conditions = (draft.immunities.conditionsStr || '').split(',').map(s => s.trim()).filter(Boolean);
+                    delete draft.resistances.damageStr;
+                    delete draft.vulnerabilities.damageStr;
+                    delete draft.immunities.damageStr;
+                    delete draft.immunities.conditionsStr;
+                }
+                const filteredMonsters = computed(() => {
+                    return monsters.value.filter(m => !monsterFilters.keyword || m.name.includes(monsterFilters.keyword)).filter(m => !monsterFilters.cr || String(m.cr) === monsterFilters.cr).filter(m => monsterFilters.types.length === 0 || (m.type || []).some(t => monsterFilters.types.includes(t)));
+                });
+
+                function toggleTypeFilter(t) {
+                    const idx = monsterFilters.types.indexOf(t);
+                    if (idx >= 0) monsterFilters.types.splice(idx, 1);
+                    else monsterFilters.types.push(t);
+                }
+                const filteredAbilities = computed(() => {
+                    return abilities.value.filter(a => !ui.abilityPool.keyword || a.name.includes(ui.abilityPool.keyword));
+                });
+                const filteredActions = computed(() => {
+                    return actions.value.filter(a => !ui.actionPool.keyword || a.name.includes(ui.actionPool.keyword));
+                });
+                // 加载数据
+                async function loadAll() {
+                    monsters.value = await db.monsters.toArray();
+                    abilities.value = await db.abilities.toArray();
+                    pcs.value = await db.pcs.toArray();
+                    actions.value = await db.actions.toArray();
+                }
+                async function seedDemo() {
+                    await seedIfEmpty();
+                    await loadAll();
+                    toast('已载入演示数据');
+                }
+                // 怪物 CRUD
+                function openMonsterEditor(m = null) {
+                    const draft = deepClone(m || emptyMonster());
+                    draft.isCustom = !!draft.isCustom;
+                    uiState.monsterDraft = draft;
+                    uiState.targetCR = draft.cr;
+                    bindListStrings(uiState.monsterDraft);
+                    ui.monsterEditor.mode = m ? 'view' : 'edit'; // 新建时默认为编辑，查看时默认为视图
+                    ui.activeEditor = 'monster';
+                    ui.monsterEditor.open = true;
+                }
+                async function saveMonsterAsCustom() {
+                    const draft = deepClone(uiState.monsterDraft);
+                    unbindListStrings(draft);
+                    draft.isCustom = true;
+                    draft.id = undefined; // Ensure it's a new entry
+                    if (draft.name) {
+                        await db.monsters.add(draft);
+                        await loadAll();
+                        ui.monsterEditor.open = false;
+                        toast('已保存为自定义怪物');
+                    } else {
+                        toast('名称不能为空');
+                    }
+                }
+                async function duplicateMonster(m) {
+                    const copy = deepClone(m);
+                    copy.id = undefined;
+                    copy.name = m.name + '（副本）';
+                    copy.isCustom = true;
+                    await db.monsters.add(copy);
+                    await loadAll();
+                    toast('已复制');
+                }
+                async function deleteMonster(id) {
+                    if (!confirm('确认删除该怪物？')) return;
+                    await db.monsters.delete(id);
+                    await loadAll();
+                    toast('已删除');
+                }
+                // 能力池
+                function openAbilityPool() {
+                    ui.abilityPool.nested = ui.monsterEditor.open || ui.pcEditor.open || ui.actionsViewer.open;
+                    ui.abilityPool.open = true;
+                }
+
+                function openAbilityEditor(ab = null) {
+                    uiState.abilityDraft = ab ? deepClone(ab) : {
+                        name: '',
+                        description: ''
+                    };
+                    ui.abilityEditor.open = true;
+                }
+
+                function openActionsViewer(draft, type) {
+                    ui.actionsViewer.draft = draft;
+                    ui.actionsViewer.title = `管理 ${draft.name} 的动作`;
+                    ui.actionsViewer.open = true;
+                }
+                async function saveAbility() {
+                    const ab = deepClone(uiState.abilityDraft);
+                    if (!ab.name) return toast('请填写名称');
+                    if (ab.id) await db.abilities.put(ab);
+                    else await db.abilities.add(ab);
+                    await loadAll();
+                    ui.abilityEditor.open = false;
+                    toast('能力已保存');
+                }
+                async function deleteAbility(id) {
+                    if (!confirm('确认删除该能力？')) return;
+                    await db.abilities.delete(id);
+                    abilities.value = await db.abilities.toArray();
+                    toast('已删除');
+                }
+
+                function attachAbilityToDraft(ab) {
+                    uiState.monsterDraft.actions = uiState.monsterDraft.actions || [];
+                    uiState.monsterDraft.actions.push({
+                        id: crypto.randomUUID(),
+                        name: ab.name,
+                        type: 'utility',
+                        note: ab.description
+                    });
+                    toast('已添加到当前怪物动作/能力中');
+                }
+
+                function openActionPool() {
+                    ui.actionPool.nested = ui.pcEditor.open || ui.monsterEditor.open || ui.actionsViewer.open;
+                    ui.actionPool.open = true;
+                }
+
+                function attachActionToDraft(action) {
+                    const draft = ui.activeEditor === 'pc' ? uiState.pcDraft : uiState.monsterDraft;
+                    if (!draft) return;
+                    draft.actions = draft.actions || [];
+                    const actionCopy = deepClone(action);
+                    delete actionCopy.id;
+                    draft.actions.push(actionCopy);
+                    toast(`已将动作添加到当前${ui.activeEditor === 'pc' ? 'PC' : '怪物'}`);
+                }
+
+                // Action CRUD
+                function openActionEditor(action = null) {
+                    uiState.actionDraft = action ? deepClone(action) : {
+                        name: '新动作',
+                        type: 'attack',
+                        attackBonus: 4,
+                        damageDice: '1d6+2',
+                        damageType: '斩击',
+                        recharge: 0,
+                        saveAbility: 'dex',
+                        saveDC: 13,
+                        onSuccess: 'half',
+                        onHitStatus: '',
+                        onHitStatusRounds: 1,
+                        onHitSaveAbility: 'dex',
+                        onHitSaveDC: 13,
+                    };
+                    ui.actionEditor.open = true;
+                }
+                async function saveAction() {
+                    const draft = deepClone(uiState.actionDraft);
+                    if (!draft.name) return toast('请填写名称');
+                    if (draft.id) await db.actions.put(draft);
+                    else await db.actions.add(draft);
+                    await loadAll();
+                    ui.actionEditor.open = false;
+                    toast('动作已保存');
+                }
+                async function deleteAction(id) {
+                    if (!confirm('确认删除该动作？')) return;
+                    await db.actions.delete(id);
+                    actions.value = await db.actions.toArray();
+                    toast('已删除');
+                }
+
+                // PC CRUD
+                function openPCEditor(pc = null) {
+                    const draft = pc ? deepClone(pc) : {
+                        name: '',
+                        ac: 14,
+                        hpMax: 20,
+                        hpCurrent: 20,
+                        abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+                        actions: [],
+                        features: ''
+                    };
+                    if (!draft.actions) draft.actions = [];
+                    if (!draft.features) draft.features = '';
+                    uiState.pcDraft = draft;
+                    ui.activeEditor = 'pc';
+                    ui.pcEditor.open = true;
+                }
+async function savePC() {
+    const draft = deepClone(uiState.pcDraft);
+    if (!draft.name) {
+        toast('请填写名称');
+        return;
+    }
+    if (draft.id) {
+        await db.pcs.put(draft);
+    } else {
+        draft.id = undefined;
+        await db.pcs.add(draft);
+    }
+    await loadAll();
+    ui.pcEditor.open = false;
+    toast('PC已保存');
+}
+                async function deletePC(id) {
+                    if (!confirm('确认删除该PC？')) return;
+                    await db.pcs.delete(id);
+                    pcs.value = await db.pcs.toArray();
+                    toast('已删除');
+                }
+                // CR 调整
+                function autoAdjustCR() {
+                    const adjusted = adjustMonsterToCR(unbindProxy(uiState.monsterDraft), uiState.targetCR);
+                    // 注意：我们仍在编辑器中展示，可让DM二次确认后保存为自定义怪物
+                    uiState.monsterDraft = adjusted;
+                    bindListStrings(uiState.monsterDraft);
+                    toast('已按占位规则调整（TODO：替换为正式智能规则表）');
+                }
+                // 参与战斗
+                function standardizeToParticipant(x) {
+                    const uid = crypto.randomUUID();
+                    return {
+                        uid,
+                        baseId: x.id || null,
+                        name: x.name,
+                        type: x.hpMax ? 'pc' : 'monster',
+                        groupName: x.name, // 同名自动分组
+                        avatar: x.type?.includes?.('dragon') ? '🐲' : (x.hpMax ? '🧝' : '👾'),
+                        ac: x.ac || 12,
+                        hpMax: x.hpMax || x.hp?.average || 10,
+                        hpCurrent: x.hpCurrent || x.hp?.average || 10,
+                        abilities: x.abilities || {
+                            str: 10,
+                            dex: 10,
+                            con: 10,
+                            int: 10,
+                            wis: 10,
+                            cha: 10
+                        },
+                        actions: deepClone(x.actions || []).map(a => ({...a, cooldown: 0})),
+                        statuses: [],
+                        initiative: null,
+                    };
+                }
+
+                function addToBattleFromEditor(entity, type) {
+                    const p = standardizeToParticipant(entity);
+                    battle.participants.push(p);
+                    if (type === 'monster') {
+                        ui.monsterEditor.open = false;
+                    } else if (type === 'pc') {
+                        ui.pcEditor.open = false;
+                    }
+                    route.value = 'battle';
+                    toast(`${p.name} 已加入战斗`);
+                }
+
+                function addToBattleFromMonster(m) {
+                    battle.participants.push(standardizeToParticipant(m));
+                    route.value = 'battle';
+                    toast('已加入战斗');
+                }
+
+                function addToBattleFromPC(pc) {
+                    battle.participants.push(standardizeToParticipant(pc));
+                    route.value = 'battle';
+                    toast('已加入战斗');
+                }
+                // 添加参战单位 modal
+                function promptAddParticipants() {
+                    ui.addParticipants.open = true;
+                }
+
+                function addParticipantsFromMonster(m, count = 1) {
+                    for (let i = 0; i < count; i++) {
+                        const p = standardizeToParticipant(m);
+                        if (count > 1) p.name = `${m.name} #${i+1}`;
+                        battle.participants.push(p);
+                    }
+                    toast('怪物已加入');
+                }
+
+                function addParticipantsFromPC(pc) {
+                    battle.participants.push(standardizeToParticipant(pc));
+                    toast('PC已加入');
+                }
+                // 先攻与回合
+function rollInitiative() {
+    for (const p of battle.participants) {
+        const dexModifier = abilityMod(p.abilities.dex || 10);
+        const d20Roll = Math.floor(Math.random() * 20) + 1;
+        p.initiativeRoll = d20Roll; // Store the raw d20 roll
+        p.initiativeModifier = dexModifier; // Store the modifier
+        p.initiative = d20Roll + dexModifier; // Keep the total for sorting
+    }
+
+    battle.participants.sort((a, b) => {
+        const aNatural20 = a.initiativeRoll === 20;
+        const bNatural20 = b.initiativeRoll === 20;
+
+        if (aNatural20 && !bNatural20) {
+            return -1; // a goes first
+        } else if (!aNatural20 && bNatural20) {
+            return 1; // b goes first
+        } else if (aNatural20 && bNatural20) {
+            // Both rolled 20, sort by modifier
+            return (b.initiativeModifier || 0) - (a.initiativeModifier || 0);
+        } else {
+            // Neither rolled 20, sort by total initiative
+            return (b.initiative || 0) - (a.initiative || 0);
+        }
+    });
+
+    battle.currentIndex = 0;
+    battle.round = 1;
+    toast('已掷先攻并排序');
+}
+
+                function setCurrentActor(uid) {
+                    const idx = battle.participants.findIndex(p => p.uid === uid);
+                    if (idx >= 0) battle.currentIndex = idx;
+                }
+
+                function nextTurn() {
+                        if (!battle.participants.length) return;
+
+                        const activeParticipant = currentActor.value;
+                        let participantWasRemoved = false;
+
+                        // 检查当前行动者是否是已阵亡的怪物
+                        if (activeParticipant && activeParticipant.hpCurrent <= 0 && activeParticipant.type === 'monster') {
+                            const deadMonsterName = activeParticipant.name;
+                            // 直接使用 removeParticipant 函数，它会处理索引
+                            removeParticipant(activeParticipant.uid);
+                            toast(`怪物【${deadMonsterName}】已在回合结束后移除。`);
+                            participantWasRemoved = true;
+                            // 注意：此时 currentIndex 不需要改变，因为下一个单位已经移动到了当前索引
+                        }
+
+                        // 如果没有移除单位，正常推进回合
+                        if (!participantWasRemoved) {
+                            battle.currentIndex++;
+                        }
+
+                        // 检查是否需要轮转到回合开始
+                        if (battle.currentIndex >= battle.participants.length) {
+                            battle.currentIndex = 0; // 轮转
+                            battle.round++;
+                        }
+
+                        // 为新回合的行动者处理状态和冷却
+                        if (currentActor.value) {
+                            decrementParticipantStatuses(currentActor.value);
+                            decrementActionCooldowns(currentActor.value);
+                        }
+                    }
+                function prevTurn() {
+                    if (!battle.participants.length) return;
+                    battle.currentIndex--;
+                    if (battle.currentIndex < 0) {
+                        battle.currentIndex = battle.participants.length - 1;
+                        battle.round = Math.max(1, battle.round - 1);
+                    }
+                    // 回合开始：处理当前行动者的状态 -1 (如果回退到上一个回合，状态不应该减少，所以这里不调用)
+                    // 如果需要回退状态，则需要更复杂的逻辑，目前只处理前进
+                }
+
+                function decrementParticipantStatuses(participant) {
+                    const remain = [];
+                    for (const s of participant.statuses) {
+                        const ns = { ...s,
+                            rounds: s.rounds - 1
+                        };
+                        if (ns.rounds > 0) remain.push(ns);
+                    }
+                    participant.statuses = remain;
+                }
+
+                function decrementActionCooldowns(participant) {
+                    if (!participant.actions) return;
+                    participant.actions.forEach(a => {
+                        if (a.cooldown > 0) {
+                            a.cooldown--;
+                        }
+                    });
+                }
+
+                function removeParticipant(uid) {
+                    const i = battle.participants.findIndex(p => p.uid === uid);
+                    if (i >= 0) {
+                        battle.participants.splice(i, 1);
+                        if (battle.currentIndex >= battle.participants.length) battle.currentIndex = 0;
+                    }
+                }
+                // 先攻条拖拽
+                function onDragStart(idx) {
+                    battle.dragIndex = idx;
+                }
+
+                function onDrop(idx) {
+                    const from = battle.dragIndex;
+                    if (from == null) return;
+                    const item = battle.participants.splice(from, 1)[0];
+                    battle.participants.splice(idx, 0, item);
+                    battle.dragIndex = null;
+                }
+                // HP 修改器
+                function applyHPDelta(p, delta) {
+                    delta = Number(delta) || 0;
+                    if (delta === 0) return;
+                    p.hpCurrent = clamp(p.hpCurrent + delta, 0, p.hpMax);
+                    // Mark monster as defeated if HP drops to 0 or below
+                    if (p.hpCurrent <= 0 && p.type === 'monster') {
+                        p.isDefeated = true;
+                        toast(`怪物【${p.name}】血量归零，将在回合结束后移除。`);
+                    }
+                }
+                // 状态
+                const statusCatalog = ref([{
+                    name: '倒地 Prone',
+                    icon: '🛌'
+                }, {
+                    name: '束缚 Restrained',
+                    icon: '⛓️'
+                }, {
+                    name: '致盲 Blinded',
+                    icon: '🕶️'
+                }, {
+                    name: '中毒 Poisoned',
+                    icon: '☠️'
+                }, {
+                    name: '魅惑 Charmed',
+                    icon: '💞'
+                }, {
+                    name: '恐慌 Frightened',
+                    icon: '😱'
+                }, ]);
+
+                function openStatusPicker(target) {
+                    ui.statusPicker.open = true;
+                    ui.statusPicker.targetUid = target.uid;
+                    // Initialize selectedName and icon when opening the picker
+                    if (statusCatalog.value.length > 0) {
+                        ui.statusPicker.selectedName = statusCatalog.value[0].name;
+                        ui.statusPicker.icon = statusCatalog.value[0].icon;
+                    }
+                }
+
+                // Watch for changes in selectedName to update the icon
+                watch(() => ui.statusPicker.selectedName, (newName) => {
+                    const selectedStatus = statusCatalog.value.find(s => s.name === newName);
+                    if (selectedStatus) {
+                        ui.statusPicker.icon = selectedStatus.icon;
+                    }
+                });
+
+                function applyStatus() {
+                    const t = battle.participants.find(p => p.uid === ui.statusPicker.targetUid);
+                    if (!t) return;
+                    t.statuses.push({
+                        id: crypto.randomUUID(),
+                        name: ui.statusPicker.selectedName,
+                        icon: ui.statusPicker.icon || '⏳',
+                        rounds: ui.statusPicker.rounds || 1,
+                    });
+                    ui.statusPicker.open = false; // Auto-close
+                }
+
+                function removeStatus(target, statusId) {
+                    target.statuses = target.statuses.filter(s => s.id !== statusId);
+                }
+                // 目标选择
+                const groupedParticipants = computed(() => {
+                    const groups = {};
+                    for (const p of battle.participants) {
+                        const g = p.groupName || p.name;
+                        if (!groups[g]) groups[g] = [];
+                        groups[g].push(p);
+                    }
+                    return Object.keys(groups).sort().map(k => ({
+                        groupName: k,
+                        members: groups[k]
+                    }));
+                });
+
+                function toggleTarget(uid) {
+                    const i = ui.selectedTargets.indexOf(uid);
+                    if (i >= 0) ui.selectedTargets.splice(i, 1);
+                    else ui.selectedTargets.push(uid);
+                }
+
+                function toggleSelectGroup(g) {
+                    const ids = g.members.map(m => m.uid);
+                    const allIn = ids.every(id => ui.selectedTargets.includes(id));
+                    if (allIn) {
+                        ui.selectedTargets = ui.selectedTargets.filter(id => !ids.includes(id));
+                    } else { // 合并去重
+                        const set = new Set(ui.selectedTargets.concat(ids));
+                        ui.selectedTargets = Array.from(set);
+                    }
+                }
+
+                function selectNone() {
+                    ui.selectedTargets = [];
+                }
+                const promptSaveCheck = (target, action, onSaveFail) => {
+                  ui.saveCheck.targetName = target.name;
+                  ui.saveCheck.dc = action.onHitSaveDC;
+                  ui.saveCheck.ability = action.onHitSaveAbility;
+                  ui.saveCheck.callback = (saveSucceeded) => {
+                    if (!saveSucceeded) {
+                      onSaveFail(); // 只有当豁免失败时，才执行传入的回调
+                    }
+                    ui.log += `${target.name} 的 ${action.onHitSaveAbility.toUpperCase()} 豁免检定 (DC ${action.onHitSaveDC}) ${saveSucceeded ? '成功' : '失败'}.\n`;
+                  };
+                  ui.saveCheck.open = true;
+                };
+                // 动作与自动化攻击流程
+                function selectAction(a) {
+                    ui.selectedAction = deepClone(a);
+                    ui.log = '已选择动作：' + a.name + '\n';
+                }
+
+                function runAction() {
+                    const actor = currentActor.value;
+                    const action = ui.selectedAction;
+                    if (!actor || !action) return;
+                    const targets = battle.participants.filter(p => ui.selectedTargets.includes(p.uid));
+                    if (!targets.length) {
+                        toast('请先在右侧选择目标');
+                        return;
+                    }
+                    let log = `【${actor.name}】使用「${action.name}」对 ${targets.length} 个目标：\n`;
+                    if (action.type === 'attack') {
+                        for (const t of targets) {
+                            const d20 = rollD20(ui.rollMode);
+                            const toHit = d20.value + (action.attackBonus || 0);
+                            const hit = (d20.value === 20) || (toHit >= t.ac);
+                            log += `- 目标【${t.name}】 -> d20(${d20.raw.join(',')}) + ${action.attackBonus||0} = ${toHit} vs AC ${t.ac} => ${d20.value===20?'重击':(hit?'命中':'未命中')}\n`;
+                            if (hit) {
+                                const dmgList = rollDamage(action.damageDice, d20.value === 20, action.damageType);
+                                log += ` 伤害：${formatDamageList(dmgList)}\n`;
+                                if (ui.autoApplyDamage) {
+                                    const total = dmgList.reduce((s, x) => s + x.amount, 0);
+                                    t.hpCurrent = clamp(t.hpCurrent - total, 0, t.hpMax);
+                                    log += ` 已自动扣血：-${dmgList.reduce((s,x)=>s+x.amount,0)}，剩余HP ${t.hpCurrent}\n`;
+                                } else {
+                                    log += ` （未自动扣血）\n`;
+                                }
+                                // 附加状态
+                                if (action.onHitStatus) {
+                                  const applyStatus = () => {
+                                    const existingStatus = t.statuses.find(s => s.name === action.onHitStatus);
+                                    if (!existingStatus) {
+                                      t.statuses.push({ name: action.onHitStatus, duration: -1 });
+                                      log(`${t.name} 获得了状态: ${action.onHitStatus}.`);
+                                    }
+                                  };
+
+                                  if (action.onHitSaveAbility && action.onHitSaveDC) {
+                                    // 需要豁免检定
+                                    promptSaveCheck(t, action, applyStatus);
+                                  } else {
+                                    // 无需豁免，直接附加
+                                    applyStatus();
+                                  }
+                                }
+                            }
+                        }
+                        ui.log = log;
+                    } else if (action.type === 'save') {
+                        // 弹窗改为提示：这里直接使用按钮输入成功/失败的交互 TODO
+                        log += `豁免检定：DC ${action.saveDC}，属性 ${action.saveAbility?.toUpperCase?.()}\n`;
+                        log += `请根据线下玩家掷骰，逐个点选成功/失败（占位交互：默认均失败）\n`;
+                        // 占位：默认失败（全伤）
+                        for (const t of targets) {
+                            const success = false; // TODO: 弹窗确认成功/失败
+                            const dmgList = rollDamage(action.damageDice, false, action.damageType);
+                            const total = dmgList.reduce((s, x) => s + x.amount, 0);
+                            const final = success ? (action.onSuccess === 'half' ? Math.floor(total / 2) : 0) : total;
+                            if (ui.autoApplyDamage) {
+                                t.hpCurrent = clamp(t.hpCurrent - final, 0, t.hpMax);
+                            }
+                            log += `- 目标【${t.name}】 -> ${success?'成功':'失败'}，伤害 ${final}（${formatDamageList(dmgList)}${success?'，成功规则：'+(action.onSuccess==='half'?'半伤':'免疫'):''}）; HP=${t.hpCurrent}\n`;
+                        }
+                        ui.log = log + '（TODO：在执行前弹出分目标确认的成功/失败按钮）';
+                    } else {
+                        ui.log = '该动作不支持自动结算（utility）。';
+                    }
+
+                    // Cooldown
+                    if (action.recharge > 0) {
+                        const actorAction = actor.actions.find(a => a.name === action.name); // Find by name, might need better ID later
+                        if (actorAction) {
+                            actorAction.cooldown = action.recharge;
+                            log += `\n「${action.name}」进入冷却，${action.recharge}回合后可用。`;
+                            ui.log = log;
+                        }
+                    }
+                }
+                // 导出导入
+                async function exportAll() {
+                    const data = {
+                        meta: {
+                            app: 'dnd-assist-v2',
+                            exportedAt: new Date().toISOString(),
+                            version: 1
+                        },
+                        monsters: await db.monsters.toArray(),
+                        abilities: await db.abilities.toArray(),
+                        pcs: await db.pcs.toArray(),
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `dnd-local-v2-export-${Date.now()}.json`;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+                async function importAll(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const text = await file.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if (!data.monsters || !data.abilities || !data.pcs) throw new Error('格式不完整');
+                        if (!confirm('导入将覆盖现有同名数据（按简单追加）。继续吗？')) return;
+                        await db.transaction('rw', db.monsters, db.abilities, db.pcs, async () => {
+                            await db.monsters.clear();
+                            await db.abilities.clear();
+                            await db.pcs.clear();
+                            await db.monsters.bulkAdd(data.monsters);
+                            await db.abilities.bulkAdd(data.abilities);
+                            await db.pcs.bulkAdd(data.pcs);
+                        });
+                        await loadAll();
+                        toast('导入成功');
+                    } catch (err) {
+                        alert('导入失败：' + err.message);
+                    } finally {
+                        e.target.value = '';
+                    }
+                }
+                // 小提示
+                function toast(msg) {
+                    console.log('[toast]', msg);
+                }
+                // 杂项
+                function mod(v) {
+                    return abilityMod(Number(v) || 10);
+                }
+
+                function toggleTheme() { // 预留：当前为暗色，TODO：切换到浅色主题（替换CSS变量）
+                    alert('TODO：浅色主题切换');
+                }
+
+                function unbindProxy(v) {
+                    return JSON.parse(JSON.stringify(v));
+                }
+                // 当前行动者 HP 输入清零同步
+                watch(() => battle.currentIndex, () => {
+                    hpDelta.value = 5;
+                });
+                // 首次载入
+                (async () => {
+                    await seedIfEmpty();
+                    await loadAll();
+                })();
+                return {
+                    route,
+                    monsters,
+                    abilities,
+                    pcs,
+                    actions,
+                    monsterFilters,
+                    monsterTypes,
+                    damageTypes,
+                    translateType,
+                    crOptions,
+                    filteredMonsters,
+                    toggleTypeFilter,
+                    ui,
+                    uiState,
+                    monsterTypesStr,
+                    openMonsterEditor,
+                    saveMonsterAsCustom,
+                    duplicateMonster,
+                    deleteMonster,
+                    openAbilityPool,
+                    openAbilityEditor,
+                    saveAbility,
+                    openActionsViewer,
+                    deleteAbility,
+                    filteredAbilities,
+                    attachAbilityToDraft,
+                    filteredActions,
+                    openActionPool,
+                    attachActionToDraft,
+                    openPCEditor,
+                    savePC,
+                    deletePC,
+                    openActionEditor,
+                    saveAction,
+                    deleteAction,
+                    seedDemo,
+                    battle,
+                    currentActor,
+                    hpDelta,
+                    promptAddParticipants,
+                    addParticipantsFromMonster,
+                    addParticipantsFromPC,
+                    addToBattleFromEditor,
+                    addToBattleFromMonster,
+                    addToBattleFromPC,
+                    rollInitiative,
+                    nextTurn,
+                    prevTurn,
+                    setCurrentActor,
+                    onDragStart,
+                    onDrop,
+                    removeParticipant,
+                    applyHPDelta,
+                    statusCatalog,
+                    openStatusPicker,
+                    applyStatus,
+                    removeStatus,
+                    groupedParticipants,
+                    toggleTarget,
+                    toggleSelectGroup,
+                    selectNone,
+                    selectAction,
+                    runAction,
+                    exportAll,
+                    importAll,
+                    mod,
+                    toggleTheme,
+                    autoAdjustCR,
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
