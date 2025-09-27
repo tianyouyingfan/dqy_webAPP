@@ -1,7 +1,7 @@
  :root {
             --bg: #0f1012;
             --panel: #15171a;
-            --card: #1b1e22;
+            --card: rgba(26, 29, 33, 0.75);
             --muted: #8b8f96;
             --text: #e8eaed;
             --accent: #d32f2f;
@@ -102,7 +102,7 @@
 
         .btn {
             border: 1px solid #2a2e34;
-            background: #1a1d21;
+            background: #1a1d2180;
             color: #dfe3e7;
             border-radius: 10px;
             padding: 8px 12px;
@@ -234,6 +234,10 @@
         }
 
         .col {
+            background: #14171a80;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
             display: flex;
             flex-direction: column;
             gap: 6px
@@ -374,8 +378,8 @@
         }
 
         .ability {
-            background: #14171a;
-            border: 1px solid #2a2e34;
+            background: #14171a80;
+            border: 1px solid #2a2e3480;
             border-radius: 8px;
             padding: 8px;
             text-align: center
@@ -418,7 +422,7 @@
 
         .pill {
             border: 1px solid #2a2e34;
-            background: #14171a;
+            background: #14171a80;
             padding: 4px 8px;
             border-radius: 999px
         }
@@ -482,7 +486,7 @@
     border-radius: 12px;
     box-shadow: var(--shadow);
     padding: 12px;
-    max-width: 720px;
+    max-width: 1080px;
     width: 96%;
     z-index: 51;
     max-height: 90vh; /* 限制最大高度为视窗高度的90% */
