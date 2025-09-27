@@ -434,7 +434,8 @@ db.version(3).stores({
                         outcomes: {} // 存储每个目标的豁免结果 { targetUid: 'fail' | 'half' | 'zero' }
                     },
                     abilityEditor: {
-                        open: false
+                        open: false,
+                        nested: false
                     },
                     pcEditor: {
                         open: false,
@@ -730,6 +731,7 @@ db.version(3).stores({
                 }
 
                 function openAbilityEditor(ab = null) {
+                    ui.abilityEditor.nested = ui.abilityPool.open;
                     uiState.abilityDraft = ab ? deepClone(ab) : {
                         name: '',
                         description: ''

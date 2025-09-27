@@ -797,7 +797,7 @@
         </div>
 
         <!-- 模态：能力编辑 -->
-        <div class="modal-mask" v-if="ui.abilityEditor.open">
+        <div class="modal-mask" v-if="ui.abilityEditor.open" :style="{ zIndex: ui.abilityEditor.nested ? 70 : 50 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">编辑能力</div>
