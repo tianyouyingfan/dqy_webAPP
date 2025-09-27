@@ -1504,6 +1504,61 @@
                 <button class="btn" @click="dismissCurrentNotification" style="margin-top: 16px;">关闭</button>
             </div>
         </div>
+
+        <!-- 模态：快捷投骰输入 -->
+        <div v-if="ui.quickDice.inputOpen" class="modal-mask" @click.self="ui.quickDice.inputOpen = false">
+            <div class="modal" style="max-width: 480px;">
+                <form @submit.prevent="executeQuickRoll">
+                    <div class="row">
+                        <div class="title">快捷投骰</div>
+                        <div class="spacer"></div>
+                        <button class="btn" type="button" @click="ui.quickDice.inputOpen = false">关闭</button>
+                    </div>
+                    <div class="hl"></div>
+                    <div class="col">
+                        <label>输入投骰表达式 (例如: 1d20+1d4+2)</label>
+                        <input ref="quickRollInput" class="input mono" style="margin-top: 8px; font-size: 1.2em;" type="text" v-model="ui.quickDice.expression" placeholder="e.g. 2d8+4">
+                    </div>
+                    <div class="hl"></div>
+                    <div class="row">
+                        <div class="spacer"></div>
+                        <button class="btn primary" type="submit">投骰 (Enter)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 模态：快捷投骰结果 -->
+        <div v-if="ui.quickDice.resultOpen" class="modal-mask" @click.self="ui.quickDice.resultOpen = false">
+            <div class="modal dice-result-modal" style="max-width: 520px; text-align: center;">
+                <div class="row">
+                    <div class="title">投骰结果: {{ ui.quickDice.expression }}</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.quickDice.resultOpen = false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div v-if="ui.quickDice.result">
+                    <div class="dice-result-breakdown">
+                        <template v-for="(group, groupIndex) in ui.quickDice.result.rolls">
+                            <span v-for="(roll, rollIndex) in group.results" :key="group.die + rollIndex">
+                                {{ group.die }}: <strong>{{ roll }}</strong>
+                                <br>
+                            </span>
+                        </template>
+                        <span v-if="ui.quickDice.result.modifier !== 0">
+                            调整值: <strong>{{ ui.quickDice.result.modifier > 0 ? '+' : '' }}{{ ui.quickDice.result.modifier }}</strong>
+                        </span>
+                    </div>
+                    <div class="dice-result-total-label">总计</div>
+                    <div class="dice-result-total">{{ ui.quickDice.result.total }}</div>
+                </div>
+                <div class="hl"></div>
+                <div class="row">
+                    <div class="spacer"></div>
+                    <button class="btn ok" @click="ui.quickDice.resultOpen = false">好的</button>
+                </div>
+            </div>
+        </div>
         <!-- 模态：未命中提示 -->
         <div v-if="ui.missNotification.open" class="crit-notification-mask">
             <div class="miss-notification-modal">

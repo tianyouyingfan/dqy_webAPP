@@ -299,6 +299,34 @@ db.version(3).stores({
             
             return { total: Math.max(0, total), rolls, flat, type: damageType };
         }
+        function rollExpression(expr) {
+            if (!expr) return { total: 0, breakdown: '无效表达式', rolls: [] };
+            
+            const { dice, flat } = parseDiceExpr(expr);
+            let total = flat;
+            const allRolls = [];
+
+            for (const d of dice) {
+                const [countStr, facesStr] = d.toLowerCase().split('d');
+                const count = parseInt(countStr, 10) || 1;
+                const faces = parseInt(facesStr, 10);
+                if (isNaN(faces)) continue;
+
+                const currentDieRolls = [];
+                for (let i = 0; i < count; i++) {
+                    const roll = Math.floor(Math.random() * faces) + 1;
+                    total += roll;
+                    currentDieRolls.push(roll);
+                }
+                allRolls.push({ die: `d${faces}`, results: currentDieRolls });
+            }
+
+            return {
+                total: total,
+                rolls: allRolls,
+                modifier: flat
+            };
+        }
 
         function formatDamageList(dl) {
             return dl.map(x => `${x.amount} ${x.type}`).join(' + ') || '0';
@@ -507,10 +535,17 @@ db.version(3).stores({
                         toHitResult: 0,
                         targetAC: 0,
                     },
+                    quickDice: {
+                        inputOpen: false,
+                        resultOpen: false,
+                        expression: '',
+                        result: null
+                    },
                     toasts: [],
                 });
                 const hpDelta = ref(5);
                 const quickDamageInput = ref(null);
+                const quickRollInput = ref(null);
                 const participantTiles = ref(new Map());
                 const currentActor = computed(() => battle.participants[battle.currentIndex] || null);
 
@@ -1984,6 +2019,23 @@ function rollInitiative() {
                     toast(`已从组合 [${group.name}] 添加 ${addedCount} 个怪物`);
                 }
 
+                let lastDKeyPressTime = 0;
+                const handleGlobalKeyDown = (e) => {
+                    if (e.key.toLowerCase() === 'd') {
+                        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                            return;
+                        }
+                        const now = Date.now();
+                        if (now - lastDKeyPressTime < 400) {
+                            openQuickDice();
+                            lastDKeyPressTime = 0; // Reset after successful double-click
+                        } else {
+                            lastDKeyPressTime = now;
+                        }
+                    }
+                };
+                window.addEventListener('keydown', handleGlobalKeyDown);
+
                 // 首次载入
                 (async () => {
                     try {
@@ -2029,6 +2081,23 @@ function rollInitiative() {
                         Object.assign(ui.missNotification, notification.data);
                         ui.missNotification.open = true;
                     }
+                }
+
+                function openQuickDice() {
+                    ui.quickDice.expression = '';
+                    ui.quickDice.resultOpen = false;
+                    ui.quickDice.inputOpen = true;
+                    nextTick(() => {
+                        quickRollInput.value?.focus();
+                    });
+                }
+
+                function executeQuickRoll() {
+                    if (!ui.quickDice.expression.trim()) return;
+                    const result = rollExpression(ui.quickDice.expression);
+                    ui.quickDice.result = result;
+                    ui.quickDice.inputOpen = false;
+                    ui.quickDice.resultOpen = true;
                 }
 
                 return {
@@ -2138,6 +2207,8 @@ function rollInitiative() {
                     participantTiles, // Expose for the ref function
                     dismissCurrentNotification,
                     removeToast,
+                    quickRollInput,
+                    executeQuickRoll,
                 };
             }
         }).mount('#app');

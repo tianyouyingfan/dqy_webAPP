@@ -1,4 +1,4 @@
- :root {
+:root {
             --bg: #0f1012;
             --panel: #15171a;
             --card: rgba(26, 29, 33, 0.75);
@@ -806,4 +806,34 @@
 [data-tooltip]:hover::after {
     opacity: 1;
     visibility: visible;
+}
+
+/* Dice Roll Result Modal Styles */
+.dice-result-modal {
+    background: var(--panel);
+    border: 2px solid var(--accent-2);
+    box-shadow: 0 0 30px rgba(239, 83, 80, 0.6);
+}
+.dice-result-breakdown {
+    font-family: var(--mono);
+    color: var(--muted);
+    background: #0f1113;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    text-align: left;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+.dice-result-total-label {
+    color: var(--muted);
+    font-size: 1.2em;
+}
+.dice-result-total {
+    font-size: 6em;
+    font-weight: 700;
+    color: var(--warn);
+    line-height: 1.1;
+    margin-top: 4px;
 }
