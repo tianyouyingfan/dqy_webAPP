@@ -305,10 +305,10 @@
             transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Add transition for smooth effect */
         }
 
-        .init-tile.active-turn-highlight {
-            border-color: var(--accent); /* Highlight border with accent color */
-            box-shadow: 0 0 15px rgba(211, 47, 47, 0.6); /* Add a glow effect */
-        }
+.init-tile.active-turn-highlight {
+    border-color: var(--accent);
+    animation: pulse-glow 1.5s infinite alternate ease-in-out;
+}
 
         .init-header {
             display: flex;
@@ -491,6 +491,7 @@
     z-index: 51;
     max-height: 90vh; /* 限制最大高度为视窗高度的90% */
     overflow-y: auto; /* 当内容超出时，显示垂直滚动条 */
+    animation: modal-fade-in 0.25s ease-out;
 }
 
         .hscroll {
@@ -522,6 +523,7 @@
             z-index: 100;
         }
         .crit-notification-modal {
+            width: 720px;
             background: var(--panel);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
@@ -561,7 +563,7 @@
             padding: 20px;
             text-align: center;
             border: 2px solid #3b4653; /* A neutral border */
-            width: 420px;
+            width: 720px;
             animation: fadeInOut 4s ease-in-out;
             display: flex;
             flex-direction: column;
@@ -626,7 +628,7 @@
         padding: 20px;
         text-align: center;
         border: 2px solid #3b4653;
-        width: 420px;
+        width: 720px;
         animation: fadeInOut5s ease-in-out; /* 使用新的5秒动画 */
         display: flex;
         flex-direction: column;
@@ -714,3 +716,94 @@
     .toast-fade-move {
         transition: transform 0.3s ease-out;
     }
+
+/* 为这些元素添加平滑过渡效果 */
+.btn, .card, .tab, .init-tile, .target-card, .chip {
+    transition: all 0.2s ease-in-out;
+}
+
+/* 按钮悬浮效果：轻微上移和边框变亮 */
+.btn:hover {
+    transform: translateY(-2px);
+    border-color: #4a4e54;
+}
+
+/* 按钮点击效果：恢复原位并有按下的感觉 */
+.btn:active {
+    transform: translateY(0);
+    filter: brightness(0.9);
+}
+
+/* 主按钮悬浮时，颜色更亮 */
+.btn.primary:hover {
+    filter: brightness(1.15);
+}
+
+/* 卡片和先攻条单元格的悬浮效果 */
+.card:hover, .init-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .4);
+}
+
+/* 输入框和选择框的聚焦效果 */
+.input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.25);
+}
+
+/* 定义模态框入场动画 */
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 定义脉冲光晕动画 */
+@keyframes pulse-glow {
+    from {
+        box-shadow: 0 0 15px rgba(211, 47, 47, 0.4);
+    }
+    to {
+        box-shadow: 0 0 25px rgba(211, 47, 47, 0.8);
+    }
+}
+
+/* 自定义 Tooltip 容器 */
+[data-tooltip] {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Tooltip 文本框样式 */
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%; /* 定位在元素上方 */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    background-color: var(--card);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #3a3f46;
+    font-size: 13px;
+    white-space: nowrap;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 10;
+}
+
+/* 鼠标悬浮时显示 Tooltip */
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}

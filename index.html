@@ -158,7 +158,7 @@
                                 <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
                             </div>
                             <div class="statuses">
-                                <span v-for="s in p.statuses" :key="s.id" class="status" :title="s.name + ' 剩余'+ s.rounds +'回合'">
+<span v-for="s in p.statuses" :key="s.id" class="status" :data-tooltip="s.name + ' 剩余'+ s.rounds +'回合'">
                                     {{s.icon || '⏳'}} {{s.name}} ({{s.rounds}})
                                 </span>
                             </div>
