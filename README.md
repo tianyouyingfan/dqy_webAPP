@@ -82,20 +82,6 @@
 
 ---
 
-## 🖼️ 界面预览
-
-如有条件，建议在此处放置关键功能的短动图（GIF）或高分辨率截图。
-
-- 战斗主界面  
-  ![战斗主界面](https://user-images.githubusercontent.com/username/repo/assets/battle-ui.gif)
-
-- 怪物编辑器  
-  ![怪物编辑器](https://user-images.githubusercontent.com/username/repo/assets/monster-editor.png)
-
-> 提示：请将图片换成你项目真实的资源路径，并在 PR 中附带压缩优化后的图像。
-
----
-
 ## 🚀 快速开始
 
 你可以直接用浏览器打开，或通过本地服务器运行（推荐）。后者能获得更完整的 PWA/离线体验。
