@@ -846,21 +846,22 @@ db.version(3).stores({
                         }
                         uiState.actionDraft = draft;
                     } else {
-                        // Creating a new action
-                        uiState.actionDraft = {
-                            name: '新动作',
-                            type: 'attack',
-                            attackBonus: 4,
-                            damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
-                            recharge: 0,
-                            saveAbility: 'dex',
-                            saveDC: 13,
-                            onSuccess: 'half',
-                            onHitStatus: '',
-                            onHitStatusRounds: 1,
-                            onHitSaveAbility: 'dex',
-                            onHitSaveDC: 13,
-                        };
+        // Creating a new action
+        uiState.actionDraft = {
+            name: '新动作',
+            type: 'attack',
+            attackBonus: 4,
+            range: '近战',
+            damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
+            recharge: 0,
+            saveAbility: 'dex',
+            saveDC: 13,
+            onSuccess: 'half',
+            onHitStatus: '',
+            onHitStatusRounds: 1,
+            onHitSaveAbility: 'dex',
+            onHitSaveDC: 13,
+        };
                     }
                     ui.actionEditor.saveTarget = 'global';
                     ui.actionEditor.open = true;
@@ -878,18 +879,19 @@ db.version(3).stores({
                         }
                         uiState.actionDraft = draft;
                     } else {
-                        // 否则是新建一个空的私有动作
-                        uiState.actionDraft = {
-                            id: crypto.randomUUID(), // 私有动作也需要一个唯一ID用于v-for的key和编辑
-                            name: '新动作',
-                            type: 'attack',
-                            attackBonus: 4,
-                            damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
-                            recharge: 0,
-                            saveAbility: 'dex',
-                            saveDC: 13,
-                            onSuccess: 'half',
-                        };
+        // 否则是新建一个空的私有动作
+        uiState.actionDraft = {
+            id: crypto.randomUUID(), // 私有动作也需要一个唯一ID用于v-for的key和编辑
+            name: '新动作',
+            type: 'attack',
+            attackBonus: 4,
+            range: '近战',
+            damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
+            recharge: 0,
+            saveAbility: 'dex',
+            saveDC: 13,
+            onSuccess: 'half',
+        };
                     }
                     ui.actionEditor.saveTarget = 'private'; // **关键步骤**: 设置保存目标为'private'
                     ui.actionEditor.open = true;

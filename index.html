@@ -121,6 +121,7 @@
                         </div>
                         <div class="kpi muted small" style="margin-top:6px">
                             <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                            <span class="pill" v-if="action.range">距离: {{action.range}}</span>
                             <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
                             <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                         </div>
@@ -398,6 +399,7 @@
                             <div class="muted small" style="margin-top: 6px;">
                                 <template v-if="a.type === 'attack'">
                                     <span>攻击+{{ a.attackBonus }}</span>,
+                                    <span v-if="a.range">距离: {{ a.range }}</span>,
                                     <span>伤害: {{ formatDamages(a.damages) }}</span>
                                 </template>
                                 <template v-else-if="a.type === 'save'">
@@ -469,6 +471,7 @@
                                     <div class="muted small" style="margin-top: 6px;">
                                         <template v-if="a.type === 'attack'">
                                             <span>攻击+{{ a.attackBonus }}</span>,
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
                                             <span>伤害: {{ formatDamages(a.damages) }}</span>
                                         </template>
                                         <template v-else-if="a.type === 'save'">
@@ -574,10 +577,11 @@
                                         <span class="tag" v-if="a.recharge > 0">充能 {{ a.recharge }}</span>
                                     </div>
                                     <div class="muted small" style="margin-top: 6px;">
-                                        <template v-if="a.type === 'attack'">
-                                            <span>攻击+{{ a.attackBonus }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                        </template>
+                <template v-if="a.type === 'attack'">
+                    <span>攻击+{{ a.attackBonus }}</span>,
+                    <span v-if="a.range">距离: {{ a.range }}</span>,
+                    <span>伤害: {{ formatDamages(a.damages) }}</span>
+                </template>
                                         <template v-else-if="a.type === 'save'">
                                             <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
                                             <span>伤害: {{ formatDamages(a.damages) }}</span>,
@@ -893,6 +897,7 @@
             <div class="muted small" style="margin-top: 6px;">
                 <template v-if="a.type === 'attack'">
                     <span>攻击+{{ a.attackBonus }}</span>,
+                    <span v-if="a.range">距离: {{ a.range }}</span>,
                     <span>伤害: {{ formatDamages(a.damages) }}</span>
                 </template>
                 <template v-else-if="a.type === 'save'">
@@ -1039,6 +1044,10 @@
                             <div class="col">
                                 <label>攻击加值</label>
                                 <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.attackBonus" />
+                            </div>
+                            <div class="col">
+                                <label>攻击距离</label>
+                                <input class="input" style="width:90px" v-model="uiState.actionDraft.range" placeholder="例如 5 ft." />
                             </div>
                             <div class="col" style="grid-column: span 2;">
                                 <div class="row">
@@ -1450,6 +1459,7 @@
                             </div>
                             <div class="kpi muted small" style="margin-top:6px">
                                 <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
+                                <span class="pill" v-if="a.range">距离: {{a.range}}</span>
                                 <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
                                 <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
                             </div>
