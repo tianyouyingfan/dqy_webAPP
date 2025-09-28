@@ -123,7 +123,8 @@
                             <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
                             <span class="pill" v-if="action.range">距离: {{action.range}}</span>
                             <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
-                            <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+<span class="pill" v-if="action.range">距离: {{action.range}}</span>
+<span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                         </div>
                         <div class="hl"></div>
                         <div class="row">
@@ -402,10 +403,11 @@
                                     <span v-if="a.range">距离: {{ a.range }}</span>,
                                     <span>伤害: {{ formatDamages(a.damages) }}</span>
                                 </template>
-                                <template v-else-if="a.type === 'save'">
-                                    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                </template>
+<template v-else-if="a.type === 'save'">
+    <span v-if="a.range">距离: {{ a.range }}</span>,
+    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+    <span>伤害: {{ formatDamages(a.damages) }}</span>
+</template>
                                 <template v-else>
                                     <span>{{ a.note || '实用能力' }}</span>
                                 </template>
@@ -474,11 +476,12 @@
                                             <span v-if="a.range">距离: {{ a.range }}</span>,
                                             <span>伤害: {{ formatDamages(a.damages) }}</span>
                                         </template>
-                                        <template v-else-if="a.type === 'save'">
-                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>,
-                                            <span v-if="a.onSuccess === 'half'">成功则半伤</span>
-                                        </template>
+<template v-else-if="a.type === 'save'">
+    <span v-if="a.range">距离: {{ a.range }}</span>,
+    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+    <span>伤害: {{ formatDamages(a.damages) }}</span>,
+    <span v-if="a.onSuccess === 'half'">成功则半伤</span>
+</template>
                                         <template v-else>
                                             <span>{{ a.note || '实用能力' }}</span>
                                         </template>
@@ -582,7 +585,8 @@
                     <span v-if="a.range">距离: {{ a.range }}</span>,
                     <span>伤害: {{ formatDamages(a.damages) }}</span>
                 </template>
-                                        <template v-else-if="a.type === 'save'">
+<template v-else-if="a.type === 'save'">
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
                                             <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
                                             <span>伤害: {{ formatDamages(a.damages) }}</span>,
                                             <span v-if="a.onSuccess === 'half'">成功则半伤</span>
@@ -900,10 +904,11 @@
                     <span v-if="a.range">距离: {{ a.range }}</span>,
                     <span>伤害: {{ formatDamages(a.damages) }}</span>
                 </template>
-                <template v-else-if="a.type === 'save'">
-                    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                </template>
+<template v-else-if="a.type === 'save'">
+    <span v-if="a.range">距离: {{ a.range }}</span>,
+    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+    <span>伤害: {{ formatDamages(a.damages) }}</span>
+</template>
                 <template v-else>
                     <span>{{ a.note || '实用能力' }}</span>
                 </template>
@@ -1108,10 +1113,14 @@
                                     <option>cha</option>
                                 </select>
                             </div>
-                            <div class="col">
-                                <label>DC</label>
-                                <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.saveDC" />
-                            </div>
+<div class="col">
+    <label>DC</label>
+    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.saveDC" />
+</div>
+<div class="col">
+    <label>攻击距离</label>
+    <input class="input" style="width:90px" v-model="uiState.actionDraft.range" placeholder="例如 30 ft." />
+</div>
                              <div class="col" style="grid-column: span 2;">
                                 <div class="row">
                                     <label>多段伤害</label>
@@ -1461,7 +1470,8 @@
                                 <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
                                 <span class="pill" v-if="a.range">距离: {{a.range}}</span>
                                 <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
-                                <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
+<span class="pill" v-if="a.range">距离: {{a.range}}</span>
+<span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
                             </div>
                         </div>
                         <div v-if="!ui.actionsViewer.draft.actions?.length" class="placeholder small">暂无动作</div>
