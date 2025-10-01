@@ -337,6 +337,17 @@ range: '60 ft.',
             return Math.max(min, Math.min(max, n));
         }
 
+        function sortActionsByType(actions) {
+            if (!actions || !Array.isArray(actions)) return [];
+            return [...actions].sort((a, b) => {
+                const aIsUtil = a.type === 'utility';
+                const bIsUtil = b.type === 'utility';
+                if (aIsUtil && !bIsUtil) return -1; // a comes first
+                if (!aIsUtil && bIsUtil) return 1;  // b comes first
+                return 0; // maintain original order for same types
+            });
+        }
+
         // 简化的 CR 自动调整占位（TODO：替换为正式规则表）
         function adjustMonsterToCR(mon, targetCR) {
             const out = deepClone(mon);
@@ -549,6 +560,11 @@ range: '60 ft.',
                 const quickRollInput = ref(null);
                 const participantTiles = ref(new Map());
                 const currentActor = computed(() => battle.participants[battle.currentIndex] || null);
+
+                const sortedCurrentActorActions = computed(() => sortActionsByType(currentActor.value?.actions));
+                const sortedActorViewerActions = computed(() => sortActionsByType(ui.actorViewer.actor?.actions));
+                const sortedMonsterDraftActions = computed(() => sortActionsByType(uiState.monsterDraft?.actions));
+                const sortedPcDraftActions = computed(() => sortActionsByType(uiState.pcDraft?.actions));
 
                 watch(currentActor, (newActor) => {
                     if (newActor) {
@@ -2225,6 +2241,10 @@ function rollInitiative() {
                     quickRollInput,
                     executeQuickRoll,
                     selectActionFromViewer,
+                    sortedCurrentActorActions,
+                    sortedActorViewerActions,
+                    sortedMonsterDraftActions,
+                    sortedPcDraftActions,
                 };
             }
         }).mount('#app');

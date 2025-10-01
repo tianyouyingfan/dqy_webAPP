@@ -215,7 +215,7 @@
                                 <div class="hl"></div>
                                 <div class="section-title">动作/能力</div>
                                 <div class="actions-list">
-                                    <button class="btn" v-for="a in currentActor.actions || []" :key="a.id" @click="selectAction(a)" :disabled="a.cooldown > 0">
+                                    <button class="btn" v-for="a in sortedCurrentActorActions" :key="a.id" @click="selectAction(a)" :disabled="a.cooldown > 0">
                                         {{a.name}}
                                         <span v-if="a.cooldown > 0" class="muted small">(冷却中 {{a.cooldown}})</span>
                                         <span v-else class="muted small">({{a.type}})</span>
@@ -391,7 +391,7 @@
                     <div class="hl"></div>
                     <div class="section-title">动作</div>
                     <div class="grid" style="gap: 8px;">
-                        <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id"
+                        <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
                              :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
                              @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
                             <div class="row">
@@ -465,7 +465,7 @@
                             <div class="hl"></div>
                             <div class="section-title">特殊能力/动作</div>
                             <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id"
+                                <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
                                      :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
                                      @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
                                     <div class="row">
@@ -576,7 +576,7 @@
 
                             <div class="section-title">特殊能力/动作</div>
                             <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in uiState.monsterDraft.actions" :key="a.id">
+                                <div class="card" v-for="a in sortedMonsterDraftActions" :key="a.id">
                                     <div class="row">
                                         <div class="title">{{ a.name }}</div>
                                         <div class="spacer"></div>
@@ -896,7 +896,7 @@
 
     <div class="section-title">动作</div>
     <div class="grid" style="gap: 8px;">
-        <div class="card" v-for="a in uiState.pcDraft.actions" :key="a.id">
+        <div class="card" v-for="a in sortedPcDraftActions" :key="a.id">
             <div class="row">
                 <div class="title">{{ a.name }}</div>
                 <div class="spacer"></div>
