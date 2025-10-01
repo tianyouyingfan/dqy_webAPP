@@ -303,6 +303,7 @@
             border-radius: 12px;
             padding: 8px;
             transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Add transition for smooth effect */
+            justify-content: space-between;
         }
 
 .init-tile.active-turn-highlight {
@@ -325,6 +326,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden; /* Ensure image respects border-radius */
+            flex-shrink: 0;
         }
         .avatar img {
             width: 100%;

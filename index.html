@@ -148,10 +148,6 @@
                              draggable="true" @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
                             <div class="init-header">
                                 <div class="drag-handle" title="拖拽调整顺序">⠿</div>
-                                <div class="avatar">
-                                    <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
-                                    <span v-else>🎯</span>
-                                </div>
                                 <div class="col">
                                     <div style="font-weight:700">{{p.name}}</div>
                                     <div class="small muted">先攻 {{p.initiativeRoll ?? '—'}} + {{p.initiativeModifier ?? '—'}}</div>
@@ -165,6 +161,10 @@
                                 </span>
                             </div>
                             <div class="row">
+                                <div class="avatar">
+                                    <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
+                                    <span v-else>🎯</span>
+                                </div>
                                 <button class="btn small" @click="setCurrentActor(p.uid)">设为当前</button>
                                 <button class="btn small" @click="removeParticipant(p.uid)">移除</button>
                             </div>
