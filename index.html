@@ -391,7 +391,9 @@
                     <div class="hl"></div>
                     <div class="section-title">动作</div>
                     <div class="grid" style="gap: 8px;">
-                        <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id">
+                        <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id"
+                             :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
+                             @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
                             <div class="row">
                                 <div class="title">{{ a.name }}</div>
                                 <div class="spacer"></div>
@@ -463,7 +465,9 @@
                             <div class="hl"></div>
                             <div class="section-title">特殊能力/动作</div>
                             <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id">
+                                <div class="card" v-for="a in ui.actorViewer.actor.actions" :key="a.id"
+                                     :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
+                                     @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
                                     <div class="row">
                                         <div class="title">{{ a.name }}</div>
                                         <div class="spacer"></div>

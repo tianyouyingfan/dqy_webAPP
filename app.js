@@ -2104,6 +2104,17 @@ function rollInitiative() {
                     ui.quickDice.resultOpen = true;
                 }
 
+                function selectActionFromViewer(action) {
+                    // 安全校验，确保只处理可选择的动作类型
+                    if (action.type !== 'attack' && action.type !== 'save') {
+                        return;
+                    }
+                    // 1. 在主战斗界面选中该动作
+                    selectAction(action);
+                    // 2. 关闭详情查看器面板
+                    ui.actorViewer.open = false;
+                }
+
                 return {
                     monsterGroups,
                     openGroupManager,
@@ -2213,6 +2224,7 @@ function rollInitiative() {
                     removeToast,
                     quickRollInput,
                     executeQuickRoll,
+                    selectActionFromViewer,
                 };
             }
         }).mount('#app');
