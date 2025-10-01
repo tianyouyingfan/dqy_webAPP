@@ -2040,6 +2040,8 @@ function rollInitiative() {
                 }
 
                 let lastDKeyPressTime = 0;
+let lastRightKeyPressTime = 0;
+let lastLeftKeyPressTime = 0;
                 const handleGlobalKeyDown = (e) => {
                     if (e.key.toLowerCase() === 'd') {
                         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
@@ -2051,6 +2053,28 @@ function rollInitiative() {
                             lastDKeyPressTime = 0; // Reset after successful double-click
                         } else {
                             lastDKeyPressTime = now;
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                            return;
+                        }
+                        const now = Date.now();
+                        if (now - lastRightKeyPressTime < 400) {
+                            nextTurn();
+                            lastRightKeyPressTime = 0; // Reset after successful double-click
+                        } else {
+                            lastRightKeyPressTime = now;
+                        }
+                    } else if (e.key === 'ArrowLeft') {
+                        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                            return;
+                        }
+                        const now = Date.now();
+                        if (now - lastLeftKeyPressTime < 400) {
+                            prevTurn();
+                            lastLeftKeyPressTime = 0; // Reset after successful double-click
+                        } else {
+                            lastLeftKeyPressTime = now;
                         }
                     }
                 };
