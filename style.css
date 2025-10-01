@@ -498,9 +498,26 @@
 
         .hscroll {
             overflow: auto;
-            white-space: nowrap
+            white-space: nowrap;
+            /* scrollbar-color: #292727 #0F1012; */
         }
-        .underline-input {
+        .hscroll::-webkit-scrollbar {
+            height: 6px; /* 设置水平滚动条的高度 */
+        }
+
+        .hscroll::-webkit-scrollbar-track {
+            background: #292727; /* 滚动条轨道的颜色（灰色背景） */
+        }
+
+        .hscroll::-webkit-scrollbar-thumb {
+            background: #494949; /* 滚动条滑块的颜色（深灰色） */
+            border-radius: 4px; /* 滑块的圆角 */
+        }
+
+        .hscroll::-webkit-scrollbar-thumb:hover {
+            background: #888; /* 鼠标悬停时滑块的颜色（更深的灰色） */
+        }
+                .underline-input {
             background: transparent;
             border: none;
             border-bottom: 1px solid var(--muted);
