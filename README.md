@@ -66,11 +66,11 @@
 
 1.  克隆本仓库到本地:
     ```bash
-    git clone https://github.com/your-username/your-repo.git
+    git clone https://github.com/tianyouyingfan/local_simple_dnd_tool.git
     ```
-2.  进入项目目录:
+2.  进入项目目录/或者用vs code打开该文件夹:
     ```bash
-    cd your-repo
+    cd {{你拉取的文件夹}}
     ```
 3.  由于本项目是一个纯前端应用，你不需要复杂的构建过程。只需一个简单的本地服务器来托管这些静态文件即可。推荐使用 `http-server` 或 VS Code 的 `Live Server` 插件。
     *   **使用 http-server:**
@@ -81,6 +81,7 @@
         http-server
         ```
     *   **使用 Live Server:** 在 VS Code 中打开项目文件夹，右键点击 `index.html` 并选择 `Open with Live Server`。
+    （当然，npm和Python的启动方式也是可以的）
 
 ---
 
