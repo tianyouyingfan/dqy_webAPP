@@ -1,6 +1,6 @@
 {
-  "name": "董の定制化工具",
-  "short_name": "DND助手",
+  "name": "DND助手",
+  "short_name": "DND",
   "description": "一个本地运行的DND战斗辅助工具，用于管理怪物、PC和战斗流程。",
   "start_url": ".",
   "display": "standalone",
