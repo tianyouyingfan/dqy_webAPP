@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
      <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0F1012">
-    <script src="vendor/vue.global.prod.min.js"></script>
-    <script src="vendor/dexie.min.js"></script>
+    <script src="./js/vendor/vue.js"></script>
+    <script src="./js/vendor/dexie.js"></script>
 </head>
 <body>
     <div id="app" class="app" v-cloak>
@@ -1608,20 +1608,40 @@
             </div>
         </transition-group>
     </div>
-    <script src="app.js"></script>
+<!-- =================== START: 替换区域 =================== -->
+<!-- 删掉你原来的所有 <script> 标签，然后粘贴下面的代码 -->
 
-     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
-    </script>
+    <!-- 1. Import Map: 这是给我们的模块起别名的地方，像电话通讯录 -->
+<script type="importmap">
+{
+  "imports": {
+    "vue": "./js/vendor/vue.js",
+    "dexie": "./js/vendor/dexie.js",
+    "db": "./js/modules/db.js",
+    "utils": "./js/modules/utils.js",
+    "state": "./js/modules/state.js",
+    "constants": "./js/modules/constants.js"
+  }
+}
+</script>
+
+<!-- 2. 主模块入口 -->
+<script type="module" src="js/main.js"></script>
+
+<!-- 3. Service Worker 注册脚本 -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+        });
+    }
+</script>
+
 </body>
 </html>
