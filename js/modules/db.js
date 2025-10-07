@@ -1,5 +1,3 @@
-// js/modules/db.js
-
 import Dexie from 'dexie';
 
 // Dexie 初始化
@@ -14,9 +12,6 @@ db.version(3).stores({
 
 // 导出种子数据函数
 export async function seedIfEmpty() {
-    // ... (此处省略了长长的种子数据，请从你的 app.js 中复制 seedIfEmpty 函数的完整内容)
-    // 从 "const count = await db.monsters.count();" 开始
-    // 到 "}, ]);" 结束
     const count = await db.monsters.count();
     if (count > 0) return;
     await db.abilities.bulkAdd([{
@@ -25,7 +20,7 @@ export async function seedIfEmpty() {
     }, {
         name: '敏捷闪避',
         description: '在可见来源的范围效果伤害上掷成功时不受伤，失败时只受半伤。'
-    }, ]);
+    },]);
     const actionCount = await db.actions.count();
     if (actionCount === 0) {
         await db.actions.bulkAdd([
@@ -79,7 +74,7 @@ export async function seedIfEmpty() {
             attackBonus: 4,
             damageDice: '1d6+2',
             damageType: '穿刺'
-        }, ],
+        },],
         isCustom: false
     }, {
         name: '食人魔',
@@ -127,7 +122,7 @@ export async function seedIfEmpty() {
             attackBonus: 6,
             damageDice: '2d6+4',
             damageType: '穿刺'
-        }, ],
+        },],
         isCustom: false
     }, {
         name: '成年红龙',
@@ -177,10 +172,10 @@ export async function seedIfEmpty() {
             saveDC: 21,
             damageDice: '18d6',
             damageType: '火焰',
-onSuccess: 'half',
-range: '60 ft.',
+            onSuccess: 'half',
+            range: '60 ft.',
             recharge: 6,
-        }, ],
+        },],
         isCustom: false
     }]);
     await db.pcs.bulkAdd([{
@@ -213,5 +208,5 @@ range: '60 ft.',
         },
         actions: [],
         features: '一位敏捷的游侠，擅长弓箭和野外生存。'
-    }, ]);
+    },]);
 }

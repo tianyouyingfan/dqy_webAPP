@@ -39,7 +39,7 @@ export function parseDiceExpr(expr) {
 }
 export function rollDamage(expr, isCrit = false, damageType = 'generic') {
     if (!expr) return [{ amount: 0, type: damageType }];
-    
+
     const { dice, flat } = parseDiceExpr(expr);
     let total = flat;
     for (const d of dice) {
@@ -51,12 +51,12 @@ export function rollDamage(expr, isCrit = false, damageType = 'generic') {
             total += Math.floor(Math.random() * faces) + 1;
         }
     }
-    
+
     return [{ amount: Math.max(0, total), type: damageType }];
 }
 export function rollDamageWithDetails(expr, isCrit = false, damageType = 'generic') {
     if (!expr) return { total: 0, rolls: [], flat: 0, type: damageType };
-    
+
     const { dice, flat } = parseDiceExpr(expr);
     let total = flat;
     const rolls = [];
@@ -71,12 +71,12 @@ export function rollDamageWithDetails(expr, isCrit = false, damageType = 'generi
             total += roll;
         }
     }
-    
+
     return { total: Math.max(0, total), rolls, flat, type: damageType };
 }
 export function rollExpression(expr) {
     if (!expr) return { total: 0, breakdown: '无效表达式', rolls: [] };
-    
+
     const { dice, flat } = parseDiceExpr(expr);
     let total = flat;
     const allRolls = [];
@@ -133,11 +133,11 @@ export function adjustMonsterToCR(mon, targetCR) {
         if (a.type === 'attack') {
             a.attackBonus = Math.round((a.attackBonus || 3) + (scale - 1) * 2);
             // 粗略伤害上调：额外 +Xd6
-            a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(1, Math.round(1*scale))}d6`;
+            a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(1, Math.round(1 * scale))}d6`;
         }
         if (a.type === 'save') {
             a.saveDC = Math.round((a.saveDC || 12) + (scale - 1) * 2);
-            a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(2, Math.round(2*scale))}d6`;
+            a.damageDice = a.damageDice ? `${a.damageDice}+${Math.max(1, Math.round(scale))}d6` : `${Math.max(2, Math.round(2 * scale))}d6`;
         }
     });
     return out;

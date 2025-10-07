@@ -1,5 +1,3 @@
-// sw.js
-
 // 1. 更改缓存名称！这是强制浏览器更新缓存的信号。
 const CACHE_NAME = 'dnd-assist-v0.5.0-modular';
 
@@ -11,7 +9,7 @@ const urlsToCache = [
   'manifest.json', // 明确缓存manifest
   'icon-192.png',
   'icon-512.png',
-  'js/main.js', // 新的主入口
+  'js/main.js', // 主入口
   'js/modules/db.js',
   'js/modules/utils.js',
   'js/modules/state.js',

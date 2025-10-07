@@ -33,21 +33,21 @@ export const battle = reactive({
 });
 // 状态
 export const statusCatalog = ref([{
-        name: '倒地 Prone',
-        icon: '🛌'
-    }, {
-        name: '束缚 Restrained',
-        icon: '⛓️'
-    }, {
-        name: '致盲 Blinded',
-        icon: '🕶️'
-    }, {
-        name: '中毒 Poisoned',
-        icon: '☠️'
-    }, {
-        name: '魅惑 Charmed',
-        icon: '💞'
-    }, {
-        name: '恐慌 Frightened',
-        icon: '😱'
-    }, ]);
+    name: '倒地 Prone',
+    icon: '🛌'
+}, {
+    name: '束缚 Restrained',
+    icon: '⛓️'
+}, {
+    name: '致盲 Blinded',
+    icon: '🕶️'
+}, {
+    name: '中毒 Poisoned',
+    icon: '☠️'
+}, {
+    name: '魅惑 Charmed',
+    icon: '💞'
+}, {
+    name: '恐慌 Frightened',
+    icon: '😱'
+},]);

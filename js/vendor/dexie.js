@@ -10,7 +10,7 @@
  *
  * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/
  */
- 
+
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
 Permission to use, copy, modify, and/or distribute this software for any
@@ -23,7 +23,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-var extendStatics = function(d, b) {
+var extendStatics = function (d, b) {
     extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
@@ -36,7 +36,7 @@ function __extends(d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
-var __assign = function() {
+var __assign = function () {
     __assign = Object.assign || function __assign(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
@@ -427,9 +427,11 @@ function mapError(domError, message) {
         return domError;
     var rv = new exceptionMap[domError.name](message || domError.message, domError);
     if ("stack" in domError) {
-        setProp(rv, "stack", { get: function () {
+        setProp(rv, "stack", {
+            get: function () {
                 return this.inner.stack;
-            } });
+            }
+        });
     }
     return rv;
 }
@@ -465,7 +467,7 @@ function hookCreatingChain(f1, f2) {
         if (res !== undefined)
             arguments[0] = res;
         var onsuccess = this.onsuccess,
-        onerror = this.onerror;
+            onerror = this.onerror;
         this.onsuccess = null;
         this.onerror = null;
         var res2 = f2.apply(this, arguments);
@@ -482,7 +484,7 @@ function hookDeletingChain(f1, f2) {
     return function () {
         f1.apply(this, arguments);
         var onsuccess = this.onsuccess,
-        onerror = this.onerror;
+            onerror = this.onerror;
         this.onsuccess = this.onerror = null;
         f2.apply(this, arguments);
         if (onsuccess)
@@ -498,7 +500,7 @@ function hookUpdatingChain(f1, f2) {
         var res = f1.apply(this, arguments);
         extend(modifications, res);
         var onsuccess = this.onsuccess,
-        onerror = this.onerror;
+            onerror = this.onerror;
         this.onsuccess = null;
         this.onerror = null;
         var res2 = f2.apply(this, arguments);
@@ -570,10 +572,10 @@ var asap = function (callback, args) {
     }
 };
 var isOutsideMicroTick = true,
-needsNewPhysicalTick = true,
-unhandledErrors = [],
-rejectingErrors = [],
-rejectionMapper = mirror;
+    needsNewPhysicalTick = true,
+    unhandledErrors = [],
+    rejectingErrors = [],
+    rejectionMapper = mirror;
 var globalPSD = {
     id: 'global',
     global: true,
@@ -686,11 +688,13 @@ props(DexiePromise, {
             if (values.length === 0)
                 resolve([]);
             var remaining = values.length;
-            values.forEach(function (a, i) { return DexiePromise.resolve(a).then(function (x) {
-                values[i] = x;
-                if (!--remaining)
-                    resolve(values);
-            }, reject); });
+            values.forEach(function (a, i) {
+                return DexiePromise.resolve(a).then(function (x) {
+                    values[i] = x;
+                    if (!--remaining)
+                        resolve(values);
+                }, reject);
+            });
         });
     },
     resolve: function (value) {
@@ -751,8 +755,10 @@ if (NativePromise) {
                     resolve([]);
                 var remaining = possiblePromises.length;
                 var results = new Array(remaining);
-                possiblePromises.forEach(function (p, i) { return DexiePromise.resolve(p).then(function (value) { return results[i] = { status: "fulfilled", value: value }; }, function (reason) { return results[i] = { status: "rejected", reason: reason }; })
-                    .then(function () { return --remaining || resolve(results); }); });
+                possiblePromises.forEach(function (p, i) {
+                    return DexiePromise.resolve(p).then(function (value) { return results[i] = { status: "fulfilled", value: value }; }, function (reason) { return results[i] = { status: "rejected", reason: reason }; })
+                        .then(function () { return --remaining || resolve(results); });
+                });
             });
         });
     if (NativePromise.any && typeof AggregateError !== 'undefined')
@@ -763,11 +769,13 @@ if (NativePromise) {
                     reject(new AggregateError([]));
                 var remaining = possiblePromises.length;
                 var failures = new Array(remaining);
-                possiblePromises.forEach(function (p, i) { return DexiePromise.resolve(p).then(function (value) { return resolve(value); }, function (failure) {
-                    failures[i] = failure;
-                    if (!--remaining)
-                        reject(new AggregateError(failures));
-                }); });
+                possiblePromises.forEach(function (p, i) {
+                    return DexiePromise.resolve(p).then(function (value) { return resolve(value); }, function (failure) {
+                        failures[i] = failure;
+                        if (!--remaining)
+                            reject(new AggregateError(failures));
+                    });
+                });
             });
         });
     if (NativePromise.withResolvers)
@@ -1165,7 +1173,7 @@ function combine(filter1, filter2) {
 }
 
 var AnyRange = {
-    type: 3 ,
+    type: 3,
     lower: -Infinity,
     lowerOpen: false,
     upper: [[]],
@@ -1278,7 +1286,7 @@ function builtInDeletionTrigger(table, keys, res) {
     })).then(function () { return res; });
 }
 
-var PropModification =  (function () {
+var PropModification = (function () {
     function PropModification(spec) {
         this["@@propmod"] = spec;
     }
@@ -1348,7 +1356,7 @@ function applyUpdateSpec(obj, changes) {
     return anythingModified;
 }
 
-var Table =  (function () {
+var Table = (function () {
     function Table() {
     }
     Table.prototype._trans = function (mode, fn, writeLocked) {
@@ -1481,7 +1489,7 @@ var Table =  (function () {
         var _a = this, db = _a.db, tableName = _a.name;
         this.schema.mappedClass = constructor;
         if (constructor.prototype instanceof Entity) {
-            constructor =  (function (_super) {
+            constructor = (function (_super) {
                 __extends(class_1, _super);
                 function class_1() {
                     return _super !== null && _super.apply(this, arguments) || this;
@@ -1535,14 +1543,14 @@ var Table =  (function () {
             return _this.core.mutate({ trans: trans, type: 'add', keys: key != null ? [key] : null, values: [objToAdd] });
         }).then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : res.lastResult; })
             .then(function (lastResult) {
-            if (keyPath) {
-                try {
-                    setByKeyPath(obj, keyPath, lastResult);
+                if (keyPath) {
+                    try {
+                        setByKeyPath(obj, keyPath, lastResult);
+                    }
+                    catch (_) { }
                 }
-                catch (_) { }
-            }
-            return lastResult;
-        });
+                return lastResult;
+            });
     };
     Table.prototype.upsert = function (key, modifications) {
         var _this = this;
@@ -1585,25 +1593,29 @@ var Table =  (function () {
         return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'put', values: [objToAdd], keys: key != null ? [key] : null }); })
             .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : res.lastResult; })
             .then(function (lastResult) {
-            if (keyPath) {
-                try {
-                    setByKeyPath(obj, keyPath, lastResult);
+                if (keyPath) {
+                    try {
+                        setByKeyPath(obj, keyPath, lastResult);
+                    }
+                    catch (_) { }
                 }
-                catch (_) { }
-            }
-            return lastResult;
-        });
+                return lastResult;
+            });
     };
     Table.prototype.delete = function (key) {
         var _this = this;
-        return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'delete', keys: [key] })
-            .then(function (res) { return builtInDeletionTrigger(_this, [key], res); })
-            .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : undefined; }); });
+        return this._trans('readwrite', function (trans) {
+            return _this.core.mutate({ trans: trans, type: 'delete', keys: [key] })
+                .then(function (res) { return builtInDeletionTrigger(_this, [key], res); })
+                .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : undefined; });
+        });
     };
     Table.prototype.clear = function () {
         var _this = this;
-        return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'deleteRange', range: AnyRange })
-            .then(function (res) { return builtInDeletionTrigger(_this, null, res); }); })
+        return this._trans('readwrite', function (trans) {
+            return _this.core.mutate({ trans: trans, type: 'deleteRange', range: AnyRange })
+                .then(function (res) { return builtInDeletionTrigger(_this, null, res); });
+        })
             .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : undefined; });
     };
     Table.prototype.bulkGet = function (keys) {
@@ -1632,12 +1644,12 @@ var Table =  (function () {
                 objects;
             return _this.core.mutate({ trans: trans, type: 'add', keys: keys, values: objectsToAdd, wantResults: wantResults })
                 .then(function (_a) {
-                var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
-                var result = wantResults ? results : lastResult;
-                if (numFailures === 0)
-                    return result;
-                throw new BulkError("".concat(_this.name, ".bulkAdd(): ").concat(numFailures, " of ").concat(numObjects, " operations failed"), failures);
-            });
+                    var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
+                    var result = wantResults ? results : lastResult;
+                    if (numFailures === 0)
+                        return result;
+                    throw new BulkError("".concat(_this.name, ".bulkAdd(): ").concat(numFailures, " of ").concat(numObjects, " operations failed"), failures);
+                });
         });
     };
     Table.prototype.bulkPut = function (objects, keysOrOptions, options) {
@@ -1657,12 +1669,12 @@ var Table =  (function () {
                 objects;
             return _this.core.mutate({ trans: trans, type: 'put', keys: keys, values: objectsToPut, wantResults: wantResults })
                 .then(function (_a) {
-                var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
-                var result = wantResults ? results : lastResult;
-                if (numFailures === 0)
-                    return result;
-                throw new BulkError("".concat(_this.name, ".bulkPut(): ").concat(numFailures, " of ").concat(numObjects, " operations failed"), failures);
-            });
+                    var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
+                    var result = wantResults ? results : lastResult;
+                    if (numFailures === 0)
+                        return result;
+                    throw new BulkError("".concat(_this.name, ".bulkPut(): ").concat(numFailures, " of ").concat(numObjects, " operations failed"), failures);
+                });
         });
     };
     Table.prototype.bulkUpdate = function (keysAndChanges) {
@@ -1699,30 +1711,30 @@ var Table =  (function () {
                 var numEntries = resultKeys.length;
                 return coreTable
                     .mutate({
-                    trans: trans,
-                    type: 'put',
-                    keys: resultKeys,
-                    values: resultObjs,
-                    updates: {
-                        keys: keys,
-                        changeSpecs: changeSpecs
-                    }
-                })
-                    .then(function (_a) {
-                    var numFailures = _a.numFailures, failures = _a.failures;
-                    if (numFailures === 0)
-                        return numEntries;
-                    for (var _i = 0, _b = Object.keys(failures); _i < _b.length; _i++) {
-                        var offset = _b[_i];
-                        var mappedOffset = offsetMap[Number(offset)];
-                        if (mappedOffset != null) {
-                            var failure = failures[offset];
-                            delete failures[offset];
-                            failures[mappedOffset] = failure;
+                        trans: trans,
+                        type: 'put',
+                        keys: resultKeys,
+                        values: resultObjs,
+                        updates: {
+                            keys: keys,
+                            changeSpecs: changeSpecs
                         }
-                    }
-                    throw new BulkError("".concat(_this.name, ".bulkUpdate(): ").concat(numFailures, " of ").concat(numEntries, " operations failed"), failures);
-                });
+                    })
+                    .then(function (_a) {
+                        var numFailures = _a.numFailures, failures = _a.failures;
+                        if (numFailures === 0)
+                            return numEntries;
+                        for (var _i = 0, _b = Object.keys(failures); _i < _b.length; _i++) {
+                            var offset = _b[_i];
+                            var mappedOffset = offsetMap[Number(offset)];
+                            if (mappedOffset != null) {
+                                var failure = failures[offset];
+                                delete failures[offset];
+                                failures[mappedOffset] = failure;
+                            }
+                        }
+                        throw new BulkError("".concat(_this.name, ".bulkUpdate(): ").concat(numFailures, " of ").concat(numEntries, " operations failed"), failures);
+                    });
             });
         });
     };
@@ -1905,7 +1917,7 @@ function iterate(cursorPromise, filter, fn, valueMapper) {
     });
 }
 
-var Collection =  (function () {
+var Collection = (function () {
     function Collection() {
     }
     Collection.prototype._read = function (fn, cb) {
@@ -2241,31 +2253,35 @@ var Collection =  (function () {
                         return Promise.resolve(addValues.length > 0 &&
                             coreTable.mutate({ trans: trans, type: 'add', values: addValues })
                                 .then(function (res) {
-                                for (var pos in res.failures) {
-                                    deleteKeys.splice(parseInt(pos), 1);
-                                }
-                                applyMutateResult(addValues.length, res);
-                            })).then(function () { return (putValues.length > 0 || (criteria && typeof changes === 'object')) &&
-                            coreTable.mutate({
-                                trans: trans,
-                                type: 'put',
-                                keys: putKeys,
-                                values: putValues,
-                                criteria: criteria,
-                                changeSpec: typeof changes !== 'function'
-                                    && changes,
-                                isAdditionalChunk: offset > 0
-                            }).then(function (res) { return applyMutateResult(putValues.length, res); }); }).then(function () { return (deleteKeys.length > 0 || (criteria && isUnconditionalDelete)) &&
-                            coreTable.mutate({
-                                trans: trans,
-                                type: 'delete',
-                                keys: deleteKeys,
-                                criteria: criteria,
-                                isAdditionalChunk: offset > 0
-                            }).then(function (res) { return builtInDeletionTrigger(ctx.table, deleteKeys, res); })
-                                .then(function (res) { return applyMutateResult(deleteKeys.length, res); }); }).then(function () {
-                            return keys.length > offset + count && nextChunk(offset + limit);
-                        });
+                                    for (var pos in res.failures) {
+                                        deleteKeys.splice(parseInt(pos), 1);
+                                    }
+                                    applyMutateResult(addValues.length, res);
+                                })).then(function () {
+                                    return (putValues.length > 0 || (criteria && typeof changes === 'object')) &&
+                                        coreTable.mutate({
+                                            trans: trans,
+                                            type: 'put',
+                                            keys: putKeys,
+                                            values: putValues,
+                                            criteria: criteria,
+                                            changeSpec: typeof changes !== 'function'
+                                                && changes,
+                                            isAdditionalChunk: offset > 0
+                                        }).then(function (res) { return applyMutateResult(putValues.length, res); });
+                                }).then(function () {
+                                    return (deleteKeys.length > 0 || (criteria && isUnconditionalDelete)) &&
+                                        coreTable.mutate({
+                                            trans: trans,
+                                            type: 'delete',
+                                            keys: deleteKeys,
+                                            criteria: criteria,
+                                            isAdditionalChunk: offset > 0
+                                        }).then(function (res) { return builtInDeletionTrigger(ctx.table, deleteKeys, res); })
+                                            .then(function (res) { return applyMutateResult(deleteKeys.length, res); });
+                                }).then(function () {
+                                    return keys.length > offset + count && nextChunk(offset + limit);
+                                });
                     });
                 };
                 return nextChunk(0).then(function () {
@@ -2280,19 +2296,18 @@ var Collection =  (function () {
         var ctx = this._ctx, range = ctx.range;
         if (isPlainKeyRange(ctx) &&
             !ctx.table.schema.yProps &&
-            (ctx.isPrimKey || range.type === 3 ))
-         {
+            (ctx.isPrimKey || range.type === 3)) {
             return this._write(function (trans) {
                 var primaryKey = ctx.table.core.schema.primaryKey;
                 var coreRange = range;
                 return ctx.table.core.count({ trans: trans, query: { index: primaryKey, range: coreRange } }).then(function (count) {
                     return ctx.table.core.mutate({ trans: trans, type: 'deleteRange', range: coreRange })
                         .then(function (_a) {
-                        var failures = _a.failures, numFailures = _a.numFailures;
-                        if (numFailures)
-                            throw new ModifyError("Could not delete some values", Object.keys(failures).map(function (pos) { return failures[pos]; }), count - numFailures);
-                        return count - numFailures;
-                    });
+                            var failures = _a.failures, numFailures = _a.numFailures;
+                            if (numFailures)
+                                throw new ModifyError("Could not delete some values", Object.keys(failures).map(function (pos) { return failures[pos]; }), count - numFailures);
+                            return count - numFailures;
+                        });
                 });
             });
         }
@@ -2444,7 +2459,7 @@ function addIgnoreCaseAlgorithm(whereClause, match, needles, suffix) {
 }
 function createRange(lower, upper, lowerOpen, upperOpen) {
     return {
-        type: 2 ,
+        type: 2,
         lower: lower,
         upper: upper,
         lowerOpen: lowerOpen,
@@ -2453,13 +2468,13 @@ function createRange(lower, upper, lowerOpen, upperOpen) {
 }
 function rangeEqual(value) {
     return {
-        type: 1 ,
+        type: 1,
         lower: value,
         upper: value
     };
 }
 
-var WhereClause =  (function () {
+var WhereClause = (function () {
     function WhereClause() {
     }
     Object.defineProperty(WhereClause.prototype, "Collection", {
@@ -2584,9 +2599,11 @@ var WhereClause =  (function () {
         catch (e) {
             return fail(this, INVALID_KEY_ARGUMENT);
         }
-        var ranges = set.reduce(function (res, val) { return res ?
-            res.concat([[res[res.length - 1][1], val]]) :
-            [[minKey, val]]; }, null);
+        var ranges = set.reduce(function (res, val) {
+            return res ?
+                res.concat([[res[res.length - 1][1], val]]) :
+                [[minKey, val]];
+        }, null);
         ranges.push([set[set.length - 1], this.db._maxKey]);
         return this.inAnyRange(ranges, { includeLowers: false, includeUppers: false });
     };
@@ -2726,7 +2743,7 @@ var DEXIE_STORAGE_MUTATED_EVENT_NAME = 'storagemutated';
 var STORAGE_MUTATED_DOM_EVENT_NAME = 'x-storagemutated-1';
 var globalEvents = Events(null, DEXIE_STORAGE_MUTATED_EVENT_NAME);
 
-var Transaction =  (function () {
+var Transaction = (function () {
     function Transaction() {
     }
     Transaction.prototype._lock = function () {
@@ -2806,8 +2823,8 @@ var Transaction =  (function () {
         if (this._locked()) {
             return new DexiePromise(function (resolve, reject) {
                 _this._blockedFuncs.push([function () {
-                        _this._promise(mode, fn, bWriteLock).then(resolve, reject);
-                    }, PSD]);
+                    _this._promise(mode, fn, bWriteLock).then(resolve, reject);
+                }, PSD]);
             });
         }
         else if (bWriteLock) {
@@ -3032,19 +3049,19 @@ function createDBCore(db, IdbKeyRange, tmpTrans) {
                         },
                         indexes: arrayify(store.indexNames).map(function (indexName) { return store.index(indexName); })
                             .map(function (index) {
-                            var name = index.name, unique = index.unique, multiEntry = index.multiEntry, keyPath = index.keyPath;
-                            var compound = isArray(keyPath);
-                            var result = {
-                                name: name,
-                                compound: compound,
-                                keyPath: keyPath,
-                                unique: unique,
-                                multiEntry: multiEntry,
-                                extractKey: getKeyExtractor(keyPath)
-                            };
-                            indexByKeyPath[getKeyPathAlias(keyPath)] = result;
-                            return result;
-                        }),
+                                var name = index.name, unique = index.unique, multiEntry = index.multiEntry, keyPath = index.keyPath;
+                                var compound = isArray(keyPath);
+                                var result = {
+                                    name: name,
+                                    compound: compound,
+                                    keyPath: keyPath,
+                                    unique: unique,
+                                    multiEntry: multiEntry,
+                                    extractKey: getKeyExtractor(keyPath)
+                                };
+                                indexByKeyPath[getKeyPathAlias(keyPath)] = result;
+                                return result;
+                            }),
                         getIndexByKeyPath: function (keyPath) { return indexByKeyPath[getKeyPathAlias(keyPath)]; }
                     };
                     indexByKeyPath[":id"] = result.primaryKey;
@@ -3061,9 +3078,9 @@ function createDBCore(db, IdbKeyRange, tmpTrans) {
         };
     }
     function makeIDBKeyRange(range) {
-        if (range.type === 3 )
+        if (range.type === 3)
             return null;
-        if (range.type === 4 )
+        if (range.type === 4)
             throw new Error("Cannot convert never type to IDBKeyRange");
         var lower = range.lower, upper = range.upper, lowerOpen = range.lowerOpen, upperOpen = range.upperOpen;
         var idbRange = lower === undefined ?
@@ -3101,9 +3118,9 @@ function createDBCore(db, IdbKeyRange, tmpTrans) {
                     preventDefault(event);
                 };
                 if (type === 'deleteRange') {
-                    if (range.type === 4 )
+                    if (range.type === 4)
                         return resolve({ numFailures: numFailures, failures: failures, results: [], lastResult: undefined });
-                    if (range.type === 3 )
+                    if (range.type === 3)
                         reqs.push(req = store.clear());
                     else
                         reqs.push(req = store.delete(makeIDBKeyRange(range)));
@@ -3590,7 +3607,7 @@ function getSchemaDiff(oldSchema, newSchema) {
                 change: []
             };
             if ((
-            '' + (oldDef.primKey.keyPath || '')) !== ('' + (newDef.primKey.keyPath || '')) ||
+                '' + (oldDef.primKey.keyPath || '')) !== ('' + (newDef.primKey.keyPath || '')) ||
                 (oldDef.primKey.auto !== newDef.primKey.auto)) {
                 change.recreate = true;
                 diff.change.push(change);
@@ -3710,7 +3727,7 @@ function parseIndexSyntax(primKeyAndIndexes) {
     });
 }
 
-var Version =  (function () {
+var Version = (function () {
     function Version() {
     }
     Version.prototype._createTableSchema = function (name, primKey, indexes) {
@@ -3857,24 +3874,24 @@ var RangeSet = function (fromOrTree, to) {
     }
 };
 props(RangeSet.prototype, (_a = {
-        add: function (rangeSet) {
-            mergeRanges(this, rangeSet);
-            return this;
-        },
-        addKey: function (key) {
-            addRange(this, key, key);
-            return this;
-        },
-        addKeys: function (keys) {
-            var _this = this;
-            keys.forEach(function (key) { return addRange(_this, key, key); });
-            return this;
-        },
-        hasKey: function (key) {
-            var node = getRangeSetIterator(this).next(key).value;
-            return node && cmp(node.from, key) <= 0 && cmp(node.to, key) >= 0;
-        }
+    add: function (rangeSet) {
+        mergeRanges(this, rangeSet);
+        return this;
     },
+    addKey: function (key) {
+        addRange(this, key, key);
+        return this;
+    },
+    addKeys: function (keys) {
+        var _this = this;
+        keys.forEach(function (key) { return addRange(_this, key, key); });
+        return this;
+    },
+    hasKey: function (key) {
+        var node = getRangeSetIterator(this).next(key).value;
+        return node && cmp(node.from, key) <= 0 && cmp(node.to, key) >= 0;
+    }
+},
     _a[iteratorSymbol] = function () {
         return getRangeSetIterator(this);
     },
@@ -4087,9 +4104,11 @@ function dexieOpen(db) {
     var state = db._state;
     var indexedDB = db._deps.indexedDB;
     if (state.isBeingOpened || db.idbdb)
-        return state.dbReadyPromise.then(function () { return state.dbOpenError ?
-            rejection(state.dbOpenError) :
-            db; });
+        return state.dbReadyPromise.then(function () {
+            return state.dbOpenError ?
+                rejection(state.dbOpenError) :
+                db;
+        });
     state.isBeingOpened = true;
     state.dbOpenError = null;
     state.openComplete = false;
@@ -4101,94 +4120,96 @@ function dexieOpen(db) {
             throw new exceptions.DatabaseClosed('db.open() was cancelled');
     }
     var resolveDbReady = state.dbReadyResolve,
-    upgradeTransaction = null, wasCreated = false;
-    var tryOpenDB = function () { return new DexiePromise(function (resolve, reject) {
-        throwIfCancelled();
-        if (!indexedDB)
-            throw new exceptions.MissingAPI();
-        var dbName = db.name;
-        var req = state.autoSchema || !nativeVerToOpen ?
-            indexedDB.open(dbName) :
-            indexedDB.open(dbName, nativeVerToOpen);
-        if (!req)
-            throw new exceptions.MissingAPI();
-        req.onerror = eventRejectHandler(reject);
-        req.onblocked = wrap(db._fireOnBlocked);
-        req.onupgradeneeded = wrap(function (e) {
-            upgradeTransaction = req.transaction;
-            if (state.autoSchema && !db._options.allowEmptyDB) {
-                req.onerror = preventDefault;
-                upgradeTransaction.abort();
-                req.result.close();
-                var delreq = indexedDB.deleteDatabase(dbName);
-                delreq.onsuccess = delreq.onerror = wrap(function () {
-                    reject(new exceptions.NoSuchDatabase("Database ".concat(dbName, " doesnt exist")));
-                });
-            }
-            else {
-                upgradeTransaction.onerror = eventRejectHandler(reject);
-                var oldVer = e.oldVersion > Math.pow(2, 62) ? 0 : e.oldVersion;
-                wasCreated = oldVer < 1;
-                db.idbdb = req.result;
-                if (schemaPatchMode) {
-                    patchCurrentVersion(db, upgradeTransaction);
+        upgradeTransaction = null, wasCreated = false;
+    var tryOpenDB = function () {
+        return new DexiePromise(function (resolve, reject) {
+            throwIfCancelled();
+            if (!indexedDB)
+                throw new exceptions.MissingAPI();
+            var dbName = db.name;
+            var req = state.autoSchema || !nativeVerToOpen ?
+                indexedDB.open(dbName) :
+                indexedDB.open(dbName, nativeVerToOpen);
+            if (!req)
+                throw new exceptions.MissingAPI();
+            req.onerror = eventRejectHandler(reject);
+            req.onblocked = wrap(db._fireOnBlocked);
+            req.onupgradeneeded = wrap(function (e) {
+                upgradeTransaction = req.transaction;
+                if (state.autoSchema && !db._options.allowEmptyDB) {
+                    req.onerror = preventDefault;
+                    upgradeTransaction.abort();
+                    req.result.close();
+                    var delreq = indexedDB.deleteDatabase(dbName);
+                    delreq.onsuccess = delreq.onerror = wrap(function () {
+                        reject(new exceptions.NoSuchDatabase("Database ".concat(dbName, " doesnt exist")));
+                    });
                 }
-                runUpgraders(db, oldVer / 10, upgradeTransaction, reject);
-            }
-        }, reject);
-        req.onsuccess = wrap(function () {
-            upgradeTransaction = null;
-            var idbdb = db.idbdb = req.result;
-            var objectStoreNames = slice(idbdb.objectStoreNames);
-            if (objectStoreNames.length > 0)
-                try {
-                    var tmpTrans = idbdb.transaction(safariMultiStoreFix(objectStoreNames), 'readonly');
-                    if (state.autoSchema)
-                        readGlobalSchema(db, idbdb, tmpTrans);
-                    else {
-                        adjustToExistingIndexNames(db, db._dbSchema, tmpTrans);
-                        if (!verifyInstalledSchema(db, tmpTrans) && !schemaPatchMode) {
-                            console.warn("Dexie SchemaDiff: Schema was extended without increasing the number passed to db.version(). Dexie will add missing parts and increment native version number to workaround this.");
-                            idbdb.close();
-                            nativeVerToOpen = idbdb.version + 1;
-                            schemaPatchMode = true;
-                            return resolve(tryOpenDB());
-                        }
+                else {
+                    upgradeTransaction.onerror = eventRejectHandler(reject);
+                    var oldVer = e.oldVersion > Math.pow(2, 62) ? 0 : e.oldVersion;
+                    wasCreated = oldVer < 1;
+                    db.idbdb = req.result;
+                    if (schemaPatchMode) {
+                        patchCurrentVersion(db, upgradeTransaction);
                     }
-                    generateMiddlewareStacks(db, tmpTrans);
+                    runUpgraders(db, oldVer / 10, upgradeTransaction, reject);
                 }
-                catch (e) {
-                }
-            connections.push(db);
-            idbdb.onversionchange = wrap(function (ev) {
-                state.vcFired = true;
-                db.on("versionchange").fire(ev);
-            });
-            idbdb.onclose = wrap(function () {
-                db.close({ disableAutoOpen: false });
-            });
-            if (wasCreated)
-                _onDatabaseCreated(db._deps, dbName);
-            resolve();
-        }, reject);
-    }).catch(function (err) {
-        switch (err === null || err === void 0 ? void 0 : err.name) {
-            case "UnknownError":
-                if (state.PR1398_maxLoop > 0) {
-                    state.PR1398_maxLoop--;
-                    console.warn('Dexie: Workaround for Chrome UnknownError on open()');
-                    return tryOpenDB();
-                }
-                break;
-            case "VersionError":
-                if (nativeVerToOpen > 0) {
-                    nativeVerToOpen = 0;
-                    return tryOpenDB();
-                }
-                break;
-        }
-        return DexiePromise.reject(err);
-    }); };
+            }, reject);
+            req.onsuccess = wrap(function () {
+                upgradeTransaction = null;
+                var idbdb = db.idbdb = req.result;
+                var objectStoreNames = slice(idbdb.objectStoreNames);
+                if (objectStoreNames.length > 0)
+                    try {
+                        var tmpTrans = idbdb.transaction(safariMultiStoreFix(objectStoreNames), 'readonly');
+                        if (state.autoSchema)
+                            readGlobalSchema(db, idbdb, tmpTrans);
+                        else {
+                            adjustToExistingIndexNames(db, db._dbSchema, tmpTrans);
+                            if (!verifyInstalledSchema(db, tmpTrans) && !schemaPatchMode) {
+                                console.warn("Dexie SchemaDiff: Schema was extended without increasing the number passed to db.version(). Dexie will add missing parts and increment native version number to workaround this.");
+                                idbdb.close();
+                                nativeVerToOpen = idbdb.version + 1;
+                                schemaPatchMode = true;
+                                return resolve(tryOpenDB());
+                            }
+                        }
+                        generateMiddlewareStacks(db, tmpTrans);
+                    }
+                    catch (e) {
+                    }
+                connections.push(db);
+                idbdb.onversionchange = wrap(function (ev) {
+                    state.vcFired = true;
+                    db.on("versionchange").fire(ev);
+                });
+                idbdb.onclose = wrap(function () {
+                    db.close({ disableAutoOpen: false });
+                });
+                if (wasCreated)
+                    _onDatabaseCreated(db._deps, dbName);
+                resolve();
+            }, reject);
+        }).catch(function (err) {
+            switch (err === null || err === void 0 ? void 0 : err.name) {
+                case "UnknownError":
+                    if (state.PR1398_maxLoop > 0) {
+                        state.PR1398_maxLoop--;
+                        console.warn('Dexie: Workaround for Chrome UnknownError on open()');
+                        return tryOpenDB();
+                    }
+                    break;
+                case "VersionError":
+                    if (nativeVerToOpen > 0) {
+                        nativeVerToOpen = 0;
+                        return tryOpenDB();
+                    }
+                    break;
+            }
+            return DexiePromise.reject(err);
+        });
+    };
     return DexiePromise.race([
         openCanceller,
         (typeof navigator === 'undefined' ? DexiePromise.resolve() : idbReady()).then(tryOpenDB)
@@ -4307,17 +4328,19 @@ function enterTransactionScope(db, mode, storeNames, parentTransaction, scopeFun
             }
         }, zoneProps);
         return (returnValue && typeof returnValue.then === 'function' ?
-            DexiePromise.resolve(returnValue).then(function (x) { return trans.active ?
-                x
-                : rejection(new exceptions.PrematureCommit("Transaction committed too early. See http://bit.ly/2kdckMn")); })
+            DexiePromise.resolve(returnValue).then(function (x) {
+                return trans.active ?
+                    x
+                    : rejection(new exceptions.PrematureCommit("Transaction committed too early. See http://bit.ly/2kdckMn"));
+            })
             : promiseFollowed.then(function () { return returnValue; })).then(function (x) {
-            if (parentTransaction)
-                trans._resolve();
-            return trans._completion.then(function () { return x; });
-        }).catch(function (e) {
-            trans._reject(e);
-            return rejection(e);
-        });
+                if (parentTransaction)
+                    trans._resolve();
+                return trans._completion.then(function () { return x; });
+            }).catch(function (e) {
+                trans._reject(e);
+                return rejection(e);
+            });
     });
 }
 
@@ -4328,7 +4351,8 @@ function pad(a, value, count) {
     return result;
 }
 function createVirtualIndexMiddleware(down) {
-    return __assign(__assign({}, down), { table: function (tableName) {
+    return __assign(__assign({}, down), {
+        table: function (tableName) {
             var table = down.table(tableName);
             var schema = table.schema;
             var indexLookup = {};
@@ -4338,9 +4362,11 @@ function createVirtualIndexMiddleware(down) {
                 var indexList = (indexLookup[keyPathAlias] = indexLookup[keyPathAlias] || []);
                 var keyLength = keyPath == null ? 0 : typeof keyPath === 'string' ? 1 : keyPath.length;
                 var isVirtual = keyTail > 0;
-                var virtualIndex = __assign(__assign({}, lowLevelIndex), { name: isVirtual
+                var virtualIndex = __assign(__assign({}, lowLevelIndex), {
+                    name: isVirtual
                         ? "".concat(keyPathAlias, "(virtual-from:").concat(lowLevelIndex.name, ")")
-                        : lowLevelIndex.name, lowLevelIndex: lowLevelIndex, isVirtual: isVirtual, keyTail: keyTail, keyLength: keyLength, extractKey: getKeyExtractor(keyPath), unique: !isVirtual && lowLevelIndex.unique });
+                        : lowLevelIndex.name, lowLevelIndex: lowLevelIndex, isVirtual: isVirtual, keyTail: keyTail, keyLength: keyLength, extractKey: getKeyExtractor(keyPath), unique: !isVirtual && lowLevelIndex.unique
+                });
                 indexList.push(virtualIndex);
                 if (!virtualIndex.isPrimaryKey) {
                     allVirtualIndexes.push(virtualIndex);
@@ -4366,8 +4392,8 @@ function createVirtualIndexMiddleware(down) {
             }
             function translateRange(range, keyTail) {
                 return {
-                    type: range.type === 1  ?
-                        2  :
+                    type: range.type === 1 ?
+                        2 :
                         range.type,
                     lower: pad(range.lower, range.lowerOpen ? down.MAX_KEY : down.MIN_KEY, keyTail),
                     lowerOpen: true,
@@ -4377,12 +4403,15 @@ function createVirtualIndexMiddleware(down) {
             }
             function translateRequest(req) {
                 var index = req.query.index;
-                return index.isVirtual ? __assign(__assign({}, req), { query: {
+                return index.isVirtual ? __assign(__assign({}, req), {
+                    query: {
                         index: index.lowLevelIndex,
                         range: translateRange(req.query.range, index.keyTail)
-                    } }) : req;
+                    }
+                }) : req;
             }
-            var result = __assign(__assign({}, table), { schema: __assign(__assign({}, schema), { primaryKey: primaryKey, indexes: allVirtualIndexes, getIndexByKeyPath: findBestIndex }), count: function (req) {
+            var result = __assign(__assign({}, table), {
+                schema: __assign(__assign({}, schema), { primaryKey: primaryKey, indexes: allVirtualIndexes, getIndexByKeyPath: findBestIndex }), count: function (req) {
                     return table.count(translateRequest(req));
                 }, query: function (req) {
                     return table.query(translateRequest(req));
@@ -4397,8 +4426,8 @@ function createVirtualIndexMiddleware(down) {
                                 req.unique ?
                                     cursor.continue(cursor.key.slice(0, keyLength)
                                         .concat(req.reverse
-                                        ? down.MIN_KEY
-                                        : down.MAX_KEY, keyTail)) :
+                                            ? down.MIN_KEY
+                                            : down.MAX_KEY, keyTail)) :
                                     cursor.continue();
                         }
                         var virtualCursor = Object.create(cursor, {
@@ -4431,9 +4460,11 @@ function createVirtualIndexMiddleware(down) {
                     }
                     return table.openCursor(translateRequest(req))
                         .then(function (cursor) { return cursor && createVirtualCursor(cursor); });
-                } });
+                }
+            });
             return result;
-        } });
+        }
+    });
 }
 var virtualIndexMiddleware = {
     stack: "dbcore",
@@ -4486,119 +4517,125 @@ var hooksMiddleware = {
     stack: "dbcore",
     name: "HooksMiddleware",
     level: 2,
-    create: function (downCore) { return (__assign(__assign({}, downCore), { table: function (tableName) {
-            var downTable = downCore.table(tableName);
-            var primaryKey = downTable.schema.primaryKey;
-            var tableMiddleware = __assign(__assign({}, downTable), { mutate: function (req) {
-                    var dxTrans = PSD.trans;
-                    var _a = dxTrans.table(tableName).hook, deleting = _a.deleting, creating = _a.creating, updating = _a.updating;
-                    switch (req.type) {
-                        case 'add':
-                            if (creating.fire === nop)
-                                break;
-                            return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
-                        case 'put':
-                            if (creating.fire === nop && updating.fire === nop)
-                                break;
-                            return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
-                        case 'delete':
-                            if (deleting.fire === nop)
-                                break;
-                            return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
-                        case 'deleteRange':
-                            if (deleting.fire === nop)
-                                break;
-                            return dxTrans._promise('readwrite', function () { return deleteRange(req); }, true);
-                    }
-                    return downTable.mutate(req);
-                    function addPutOrDelete(req) {
+    create: function (downCore) {
+        return (__assign(__assign({}, downCore), {
+            table: function (tableName) {
+                var downTable = downCore.table(tableName);
+                var primaryKey = downTable.schema.primaryKey;
+                var tableMiddleware = __assign(__assign({}, downTable), {
+                    mutate: function (req) {
                         var dxTrans = PSD.trans;
-                        var keys = req.keys || getEffectiveKeys(primaryKey, req);
-                        if (!keys)
-                            throw new Error("Keys missing");
-                        req = req.type === 'add' || req.type === 'put' ? __assign(__assign({}, req), { keys: keys }) : __assign({}, req);
-                        if (req.type !== 'delete')
-                            req.values = __spreadArray([], req.values, true);
-                        if (req.keys)
-                            req.keys = __spreadArray([], req.keys, true);
-                        return getExistingValues(downTable, req, keys).then(function (existingValues) {
-                            var contexts = keys.map(function (key, i) {
-                                var existingValue = existingValues[i];
-                                var ctx = { onerror: null, onsuccess: null };
-                                if (req.type === 'delete') {
-                                    deleting.fire.call(ctx, key, existingValue, dxTrans);
-                                }
-                                else if (req.type === 'add' || existingValue === undefined) {
-                                    var generatedPrimaryKey = creating.fire.call(ctx, key, req.values[i], dxTrans);
-                                    if (key == null && generatedPrimaryKey != null) {
-                                        key = generatedPrimaryKey;
-                                        req.keys[i] = key;
-                                        if (!primaryKey.outbound) {
-                                            setByKeyPath(req.values[i], primaryKey.keyPath, key);
+                        var _a = dxTrans.table(tableName).hook, deleting = _a.deleting, creating = _a.creating, updating = _a.updating;
+                        switch (req.type) {
+                            case 'add':
+                                if (creating.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'put':
+                                if (creating.fire === nop && updating.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'delete':
+                                if (deleting.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'deleteRange':
+                                if (deleting.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return deleteRange(req); }, true);
+                        }
+                        return downTable.mutate(req);
+                        function addPutOrDelete(req) {
+                            var dxTrans = PSD.trans;
+                            var keys = req.keys || getEffectiveKeys(primaryKey, req);
+                            if (!keys)
+                                throw new Error("Keys missing");
+                            req = req.type === 'add' || req.type === 'put' ? __assign(__assign({}, req), { keys: keys }) : __assign({}, req);
+                            if (req.type !== 'delete')
+                                req.values = __spreadArray([], req.values, true);
+                            if (req.keys)
+                                req.keys = __spreadArray([], req.keys, true);
+                            return getExistingValues(downTable, req, keys).then(function (existingValues) {
+                                var contexts = keys.map(function (key, i) {
+                                    var existingValue = existingValues[i];
+                                    var ctx = { onerror: null, onsuccess: null };
+                                    if (req.type === 'delete') {
+                                        deleting.fire.call(ctx, key, existingValue, dxTrans);
+                                    }
+                                    else if (req.type === 'add' || existingValue === undefined) {
+                                        var generatedPrimaryKey = creating.fire.call(ctx, key, req.values[i], dxTrans);
+                                        if (key == null && generatedPrimaryKey != null) {
+                                            key = generatedPrimaryKey;
+                                            req.keys[i] = key;
+                                            if (!primaryKey.outbound) {
+                                                setByKeyPath(req.values[i], primaryKey.keyPath, key);
+                                            }
                                         }
                                     }
-                                }
-                                else {
-                                    var objectDiff = getObjectDiff(existingValue, req.values[i]);
-                                    var additionalChanges_1 = updating.fire.call(ctx, objectDiff, key, existingValue, dxTrans);
-                                    if (additionalChanges_1) {
-                                        var requestedValue_1 = req.values[i];
-                                        Object.keys(additionalChanges_1).forEach(function (keyPath) {
-                                            if (hasOwn(requestedValue_1, keyPath)) {
-                                                requestedValue_1[keyPath] = additionalChanges_1[keyPath];
-                                            }
-                                            else {
-                                                setByKeyPath(requestedValue_1, keyPath, additionalChanges_1[keyPath]);
-                                            }
-                                        });
-                                    }
-                                }
-                                return ctx;
-                            });
-                            return downTable.mutate(req).then(function (_a) {
-                                var failures = _a.failures, results = _a.results, numFailures = _a.numFailures, lastResult = _a.lastResult;
-                                for (var i = 0; i < keys.length; ++i) {
-                                    var primKey = results ? results[i] : keys[i];
-                                    var ctx = contexts[i];
-                                    if (primKey == null) {
-                                        ctx.onerror && ctx.onerror(failures[i]);
-                                    }
                                     else {
-                                        ctx.onsuccess && ctx.onsuccess(req.type === 'put' && existingValues[i] ?
-                                            req.values[i] :
-                                            primKey
-                                        );
+                                        var objectDiff = getObjectDiff(existingValue, req.values[i]);
+                                        var additionalChanges_1 = updating.fire.call(ctx, objectDiff, key, existingValue, dxTrans);
+                                        if (additionalChanges_1) {
+                                            var requestedValue_1 = req.values[i];
+                                            Object.keys(additionalChanges_1).forEach(function (keyPath) {
+                                                if (hasOwn(requestedValue_1, keyPath)) {
+                                                    requestedValue_1[keyPath] = additionalChanges_1[keyPath];
+                                                }
+                                                else {
+                                                    setByKeyPath(requestedValue_1, keyPath, additionalChanges_1[keyPath]);
+                                                }
+                                            });
+                                        }
                                     }
-                                }
-                                return { failures: failures, results: results, numFailures: numFailures, lastResult: lastResult };
-                            }).catch(function (error) {
-                                contexts.forEach(function (ctx) { return ctx.onerror && ctx.onerror(error); });
-                                return Promise.reject(error);
+                                    return ctx;
+                                });
+                                return downTable.mutate(req).then(function (_a) {
+                                    var failures = _a.failures, results = _a.results, numFailures = _a.numFailures, lastResult = _a.lastResult;
+                                    for (var i = 0; i < keys.length; ++i) {
+                                        var primKey = results ? results[i] : keys[i];
+                                        var ctx = contexts[i];
+                                        if (primKey == null) {
+                                            ctx.onerror && ctx.onerror(failures[i]);
+                                        }
+                                        else {
+                                            ctx.onsuccess && ctx.onsuccess(req.type === 'put' && existingValues[i] ?
+                                                req.values[i] :
+                                                primKey
+                                            );
+                                        }
+                                    }
+                                    return { failures: failures, results: results, numFailures: numFailures, lastResult: lastResult };
+                                }).catch(function (error) {
+                                    contexts.forEach(function (ctx) { return ctx.onerror && ctx.onerror(error); });
+                                    return Promise.reject(error);
+                                });
                             });
-                        });
+                        }
+                        function deleteRange(req) {
+                            return deleteNextChunk(req.trans, req.range, 10000);
+                        }
+                        function deleteNextChunk(trans, range, limit) {
+                            return downTable.query({ trans: trans, values: false, query: { index: primaryKey, range: range }, limit: limit })
+                                .then(function (_a) {
+                                    var result = _a.result;
+                                    return addPutOrDelete({ type: 'delete', keys: result, trans: trans }).then(function (res) {
+                                        if (res.numFailures > 0)
+                                            return Promise.reject(res.failures[0]);
+                                        if (result.length < limit) {
+                                            return { failures: [], numFailures: 0, lastResult: undefined };
+                                        }
+                                        else {
+                                            return deleteNextChunk(trans, __assign(__assign({}, range), { lower: result[result.length - 1], lowerOpen: true }), limit);
+                                        }
+                                    });
+                                });
+                        }
                     }
-                    function deleteRange(req) {
-                        return deleteNextChunk(req.trans, req.range, 10000);
-                    }
-                    function deleteNextChunk(trans, range, limit) {
-                        return downTable.query({ trans: trans, values: false, query: { index: primaryKey, range: range }, limit: limit })
-                            .then(function (_a) {
-                            var result = _a.result;
-                            return addPutOrDelete({ type: 'delete', keys: result, trans: trans }).then(function (res) {
-                                if (res.numFailures > 0)
-                                    return Promise.reject(res.failures[0]);
-                                if (result.length < limit) {
-                                    return { failures: [], numFailures: 0, lastResult: undefined };
-                                }
-                                else {
-                                    return deleteNextChunk(trans, __assign(__assign({}, range), { lower: result[result.length - 1], lowerOpen: true }), limit);
-                                }
-                            });
-                        });
-                    }
-                } });
-            return tableMiddleware;
-        } })); }
+                });
+                return tableMiddleware;
+            }
+        }));
+    }
 };
 function getExistingValues(table, req, effectiveKeys) {
     return req.type === "add"
@@ -4632,7 +4669,8 @@ var cacheExistingValuesMiddleware = {
         return {
             table: function (tableName) {
                 var table = core.table(tableName);
-                return __assign(__assign({}, table), { getMany: function (req) {
+                return __assign(__assign({}, table), {
+                    getMany: function (req) {
                         if (!req.cache) {
                             return table.getMany(req);
                         }
@@ -4651,7 +4689,8 @@ var cacheExistingValuesMiddleware = {
                         if (req.type !== "add")
                             req.trans["_cache"] = null;
                         return table.mutate(req);
-                    } });
+                    }
+                });
             },
         };
     },
@@ -4687,7 +4726,8 @@ var observabilityMiddleware = {
     create: function (core) {
         var dbName = core.schema.name;
         var FULL_RANGE = new RangeSet(core.MIN_KEY, core.MAX_KEY);
-        return __assign(__assign({}, core), { transaction: function (stores, mode, options) {
+        return __assign(__assign({}, core), {
+            transaction: function (stores, mode, options) {
                 if (PSD.subscr && mode !== 'readonly') {
                     throw new exceptions.ReadOnly("Readwrite transaction in liveQuery context. Querier source: ".concat(PSD.querier));
                 }
@@ -4698,7 +4738,8 @@ var observabilityMiddleware = {
                 var primaryKey = schema.primaryKey, indexes = schema.indexes;
                 var extractKey = primaryKey.extractKey, outbound = primaryKey.outbound;
                 var indexesWithAutoIncPK = primaryKey.autoIncrement && indexes.filter(function (index) { return index.compound && index.keyPath.includes(primaryKey.keyPath); });
-                var tableClone = __assign(__assign({}, table), { mutate: function (req) {
+                var tableClone = __assign(__assign({}, table), {
+                    mutate: function (req) {
                         var _a, _b;
                         var trans = req.trans;
                         var mutatedParts = req.mutatedParts || (req.mutatedParts = {});
@@ -4758,7 +4799,8 @@ var observabilityMiddleware = {
                             trans.mutatedParts = extendObservabilitySet(trans.mutatedParts || {}, mutatedParts);
                             return res;
                         });
-                    } });
+                    }
+                });
                 var getRange = function (_a) {
                     var _b, _c;
                     var _d = _a.query, index = _d.index, range = _d.range;
@@ -4860,7 +4902,8 @@ var observabilityMiddleware = {
                     };
                 });
                 return tableClone;
-            } });
+            }
+        });
     },
 };
 function trackAffectedIndexes(getRangeSet, schema, oldObjs, newObjs) {
@@ -4869,9 +4912,11 @@ function trackAffectedIndexes(getRangeSet, schema, oldObjs, newObjs) {
         function extractKey(obj) {
             return obj != null ? ix.extractKey(obj) : null;
         }
-        var addKeyOrKeys = function (key) { return ix.multiEntry && isArray(key)
-            ? key.forEach(function (key) { return rangeSet.addKey(key); })
-            : rangeSet.addKey(key); };
+        var addKeyOrKeys = function (key) {
+            return ix.multiEntry && isArray(key)
+                ? key.forEach(function (key) { return rangeSet.addKey(key); })
+                : rangeSet.addKey(key);
+        };
         (oldObjs || newObjs).forEach(function (_, i) {
             var oldKey = oldObjs && extractKey(oldObjs[i]);
             var newKey = newObjs && extractKey(newObjs[i]);
@@ -4971,22 +5016,22 @@ function applyOptimisticOps(result, req, ops, table, cacheEntry, immutable) {
                     : includedValues
                         .map(function (v) { return extractPrimKey(v); })
                         .filter(function (k) {
-                        if (existingKeys_1.hasKey(k))
-                            return false;
-                        existingKeys_1.addKey(k);
-                        return true;
-                    }));
+                            if (existingKeys_1.hasKey(k))
+                                return false;
+                            existingKeys_1.addKey(k);
+                            return true;
+                        }));
                 break;
             }
             case 'put': {
                 var keySet_1 = new RangeSet().addKeys(op.values.map(function (v) { return extractPrimKey(v); }));
                 modifedResult = result
                     .filter(
-                function (item) { return !keySet_1.hasKey(req.values ? extractPrimKey(item) : item); })
+                        function (item) { return !keySet_1.hasKey(req.values ? extractPrimKey(item) : item); })
                     .concat(
-                req.values
-                    ? includedValues
-                    : includedValues.map(function (v) { return extractPrimKey(v); }));
+                        req.values
+                            ? includedValues
+                            : includedValues.map(function (v) { return extractPrimKey(v); }));
                 break;
             }
             case 'delete':
@@ -5126,69 +5171,72 @@ var cacheMiddleware = {
     name: 'Cache',
     create: function (core) {
         var dbName = core.schema.name;
-        var coreMW = __assign(__assign({}, core), { transaction: function (stores, mode, options) {
+        var coreMW = __assign(__assign({}, core), {
+            transaction: function (stores, mode, options) {
                 var idbtrans = core.transaction(stores, mode, options);
                 if (mode === 'readwrite') {
                     var ac_1 = new AbortController();
                     var signal = ac_1.signal;
-                    var endTransaction = function (wasCommitted) { return function () {
-                        ac_1.abort();
-                        if (mode === 'readwrite') {
-                            var affectedSubscribers_1 = new Set();
-                            for (var _i = 0, stores_1 = stores; _i < stores_1.length; _i++) {
-                                var storeName = stores_1[_i];
-                                var tblCache = cache["idb://".concat(dbName, "/").concat(storeName)];
-                                if (tblCache) {
-                                    var table = core.table(storeName);
-                                    var ops = tblCache.optimisticOps.filter(function (op) { return op.trans === idbtrans; });
-                                    if (idbtrans._explicit && wasCommitted && idbtrans.mutatedParts) {
-                                        for (var _a = 0, _b = Object.values(tblCache.queries.query); _a < _b.length; _a++) {
-                                            var entries = _b[_a];
-                                            for (var _c = 0, _d = entries.slice(); _c < _d.length; _c++) {
-                                                var entry = _d[_c];
-                                                if (obsSetsOverlap(entry.obsSet, idbtrans.mutatedParts)) {
-                                                    delArrayItem(entries, entry);
-                                                    entry.subscribers.forEach(function (requery) { return affectedSubscribers_1.add(requery); });
+                    var endTransaction = function (wasCommitted) {
+                        return function () {
+                            ac_1.abort();
+                            if (mode === 'readwrite') {
+                                var affectedSubscribers_1 = new Set();
+                                for (var _i = 0, stores_1 = stores; _i < stores_1.length; _i++) {
+                                    var storeName = stores_1[_i];
+                                    var tblCache = cache["idb://".concat(dbName, "/").concat(storeName)];
+                                    if (tblCache) {
+                                        var table = core.table(storeName);
+                                        var ops = tblCache.optimisticOps.filter(function (op) { return op.trans === idbtrans; });
+                                        if (idbtrans._explicit && wasCommitted && idbtrans.mutatedParts) {
+                                            for (var _a = 0, _b = Object.values(tblCache.queries.query); _a < _b.length; _a++) {
+                                                var entries = _b[_a];
+                                                for (var _c = 0, _d = entries.slice(); _c < _d.length; _c++) {
+                                                    var entry = _d[_c];
+                                                    if (obsSetsOverlap(entry.obsSet, idbtrans.mutatedParts)) {
+                                                        delArrayItem(entries, entry);
+                                                        entry.subscribers.forEach(function (requery) { return affectedSubscribers_1.add(requery); });
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                    else if (ops.length > 0) {
-                                        tblCache.optimisticOps = tblCache.optimisticOps.filter(function (op) { return op.trans !== idbtrans; });
-                                        for (var _e = 0, _f = Object.values(tblCache.queries.query); _e < _f.length; _e++) {
-                                            var entries = _f[_e];
-                                            for (var _g = 0, _h = entries.slice(); _g < _h.length; _g++) {
-                                                var entry = _h[_g];
-                                                if (entry.res != null &&
-                                                    idbtrans.mutatedParts
-) {
-                                                    if (wasCommitted && !entry.dirty) {
-                                                        var freezeResults = Object.isFrozen(entry.res);
-                                                        var modRes = applyOptimisticOps(entry.res, entry.req, ops, table, entry, freezeResults);
-                                                        if (entry.dirty) {
-                                                            delArrayItem(entries, entry);
+                                        else if (ops.length > 0) {
+                                            tblCache.optimisticOps = tblCache.optimisticOps.filter(function (op) { return op.trans !== idbtrans; });
+                                            for (var _e = 0, _f = Object.values(tblCache.queries.query); _e < _f.length; _e++) {
+                                                var entries = _f[_e];
+                                                for (var _g = 0, _h = entries.slice(); _g < _h.length; _g++) {
+                                                    var entry = _h[_g];
+                                                    if (entry.res != null &&
+                                                        idbtrans.mutatedParts
+                                                    ) {
+                                                        if (wasCommitted && !entry.dirty) {
+                                                            var freezeResults = Object.isFrozen(entry.res);
+                                                            var modRes = applyOptimisticOps(entry.res, entry.req, ops, table, entry, freezeResults);
+                                                            if (entry.dirty) {
+                                                                delArrayItem(entries, entry);
+                                                                entry.subscribers.forEach(function (requery) { return affectedSubscribers_1.add(requery); });
+                                                            }
+                                                            else if (modRes !== entry.res) {
+                                                                entry.res = modRes;
+                                                                entry.promise = DexiePromise.resolve({ result: modRes });
+                                                            }
+                                                        }
+                                                        else {
+                                                            if (entry.dirty) {
+                                                                delArrayItem(entries, entry);
+                                                            }
                                                             entry.subscribers.forEach(function (requery) { return affectedSubscribers_1.add(requery); });
                                                         }
-                                                        else if (modRes !== entry.res) {
-                                                            entry.res = modRes;
-                                                            entry.promise = DexiePromise.resolve({ result: modRes });
-                                                        }
-                                                    }
-                                                    else {
-                                                        if (entry.dirty) {
-                                                            delArrayItem(entries, entry);
-                                                        }
-                                                        entry.subscribers.forEach(function (requery) { return affectedSubscribers_1.add(requery); });
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                                affectedSubscribers_1.forEach(function (requery) { return requery(); });
                             }
-                            affectedSubscribers_1.forEach(function (requery) { return requery(); });
-                        }
-                    }; };
+                        };
+                    };
                     idbtrans.addEventListener('abort', endTransaction(false), {
                         signal: signal,
                     });
@@ -5203,7 +5251,8 @@ var cacheMiddleware = {
             }, table: function (tableName) {
                 var downTable = core.table(tableName);
                 var primKey = downTable.schema.primaryKey;
-                var tableMW = __assign(__assign({}, downTable), { mutate: function (req) {
+                var tableMW = __assign(__assign({}, downTable), {
+                    mutate: function (req) {
                         var trans = PSD.trans;
                         if (primKey.outbound ||
                             trans.db._options.cache === 'disabled' ||
@@ -5218,7 +5267,8 @@ var cacheMiddleware = {
                         var promise = downTable.mutate(req);
                         if ((req.type === 'add' || req.type === 'put') && (req.values.length >= 50 || getEffectiveKeys(primKey, req).some(function (key) { return key == null; }))) {
                             promise.then(function (res) {
-                                var reqWithResolvedKeys = __assign(__assign({}, req), { values: req.values.map(function (value, i) {
+                                var reqWithResolvedKeys = __assign(__assign({}, req), {
+                                    values: req.values.map(function (value, i) {
                                         var _a;
                                         if (res.failures[i])
                                             return value;
@@ -5227,7 +5277,8 @@ var cacheMiddleware = {
                                             : __assign({}, value);
                                         setByKeyPath(valueWithKey, primKey.keyPath, res.results[i]);
                                         return valueWithKey;
-                                    }) });
+                                    })
+                                });
                                 var adjustedReq = adjustOptimisticFromFailures(tblCache, reqWithResolvedKeys, res);
                                 tblCache.optimisticOps.push(adjustedReq);
                                 queueMicrotask(function () { return req.mutatedParts && signalSubscribersLazily(req.mutatedParts); });
@@ -5315,9 +5366,11 @@ var cacheMiddleware = {
                                 result: applyOptimisticOps(res.result, req, tblCache === null || tblCache === void 0 ? void 0 : tblCache.optimisticOps, downTable, cacheEntry, freezeResults),
                             };
                         });
-                    } });
+                    }
+                });
                 return tableMW;
-            } });
+            }
+        });
         return coreMW;
     },
 };
@@ -5332,7 +5385,7 @@ function vipify(target, vipDb) {
     });
 }
 
-var Dexie$1 =  (function () {
+var Dexie$1 = (function () {
     function Dexie(name, options) {
         var _this = this;
         this._middlewares = {};
@@ -5340,7 +5393,8 @@ var Dexie$1 =  (function () {
         var deps = Dexie.dependencies;
         this._options = options = __assign({
             addons: Dexie.addons, autoOpen: true,
-            indexedDB: deps.indexedDB, IDBKeyRange: deps.IDBKeyRange, cache: 'cloned' }, options);
+            indexedDB: deps.indexedDB, IDBKeyRange: deps.IDBKeyRange, cache: 'cloned'
+        }, options);
         this._deps = {
             indexedDB: options.indexedDB,
             IDBKeyRange: options.IDBKeyRange
@@ -5522,7 +5576,7 @@ var Dexie$1 =  (function () {
     Dexie.prototype.open = function () {
         var _this = this;
         return usePSD(globalPSD,
-        function () { return dexieOpen(_this); });
+            function () { return dexieOpen(_this); });
     };
     Dexie.prototype._close = function () {
         this.on.close.fire(new CustomEvent('close'));
@@ -5689,7 +5743,7 @@ var Dexie$1 =  (function () {
 var symbolObservable = typeof Symbol !== "undefined" && "observable" in Symbol
     ? Symbol.observable
     : "@@observable";
-var Observable =  (function () {
+var Observable = (function () {
     function Observable(subscribe) {
         this._subscribe = subscribe;
     }
@@ -5766,8 +5820,7 @@ function liveQuery(querier) {
         };
         var _doQuery = function () {
             if (closed ||
-                !domDeps.indexedDB)
-             {
+                !domDeps.indexedDB) {
                 return;
             }
             accumMuts = {};
@@ -5896,7 +5949,8 @@ props(Dexie, __assign(__assign({}, fullNameExceptions), {
     dependencies: domDeps, cache: cache,
     semVer: DEXIE_VERSION, version: DEXIE_VERSION.split('.')
         .map(function (n) { return parseInt(n); })
-        .reduce(function (p, c, i) { return p + (c / Math.pow(10, i * 2)); }) }));
+        .reduce(function (p, c, i) { return p + (c / Math.pow(10, i * 2)); })
+}));
 Dexie.maxKey = getMaxKey(Dexie.dependencies.IDBKeyRange);
 
 if (typeof dispatchEvent !== 'undefined' && typeof addEventListener !== 'undefined') {

@@ -61,7 +61,7 @@ export const statusCatalog = ref([{
 }, {
     name: '恐慌 Frightened',
     icon: '😱'
-}, ]);
+},]);
 watch(battle, (newState) => {
     localStorage.setItem('dnd-battle-state', JSON.stringify(newState));
 }, { deep: true });
@@ -94,17 +94,17 @@ export const ui = reactive({
         keyword: '',
         nested: false
     },
-    actionsViewer: { 
-        open: false, 
-        draft: null, 
-        title: '' 
+    actionsViewer: {
+        open: false,
+        draft: null,
+        title: ''
     },
     saveCheck: {
-      open: false,
-      targetName: '',
-      dc: 0,
-      ability: '',
-      callback: null
+        open: false,
+        targetName: '',
+        dc: 0,
+        ability: '',
+        callback: null
     },
     // 在这里添加新的对象
     saveOutcomePicker: {
