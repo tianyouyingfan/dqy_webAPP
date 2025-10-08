@@ -990,6 +990,7 @@ createApp({
                 }
             }
             processNotificationQueue();
+            selectNone();
         }
         function applySaveOutcomes() {
             const { targets, damages, outcomes, action } = ui.saveOutcomePicker;
@@ -1031,6 +1032,7 @@ createApp({
             }
             ui.log = log;
             ui.saveOutcomePicker.open = false;
+            selectNone();
         }
 
         // Import / Export
