@@ -1247,3 +1247,5 @@ createApp({
     }
 }).mount('#app');
 
+document.body.classList.remove('loading');
+

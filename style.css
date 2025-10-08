@@ -943,3 +943,41 @@ select:focus {
     line-height: 1.1;
     margin-top: 4px;
 }
+
+/* --- Loading State & Spinner --- */
+.loader {
+  border: 5px solid #2a2e34; /* 轨道颜色 */
+  border-top: 5px solid var(--accent); /* 旋转部分颜色 */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1.2s linear infinite;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -25px; /* 高度的一半 */
+  margin-left: -25px; /* 宽度的一半 */
+  z-index: 9999;
+  display: none; /* 默认隐藏 */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 当 body 处于加载状态时，显示加载动画 */
+body.loading .loader {
+  display: block;
+}
+
+/* 当 body 处于加载状态时，隐藏 app 主内容 */
+body.loading #app {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* 为 app 主内容添加过渡效果，使其在显示时有淡入动画 */
+#app {
+  transition: opacity 0.4s ease-in-out;
+}
