@@ -142,3 +142,14 @@ export function adjustMonsterToCR(mon, targetCR) {
     });
     return out;
 }
+
+// <-- 新增: 为单个参与者计算先攻的工具函数
+export function rollSingleInitiative(participant) {
+    const dexModifier = abilityMod(participant.abilities.dex || 10);
+    const d20Roll = Math.floor(Math.random() * 20) + 1;
+    return {
+        initiative: d20Roll + dexModifier,
+        initiativeRoll: d20Roll,
+        initiativeModifier: dexModifier,
+    };
+}

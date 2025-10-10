@@ -459,21 +459,58 @@ createApp({
                 monsterType: x.type, features: x.features, backgroundImage: x.backgroundImage,
             };
         }
+        
+        // 核心修改点 1: 创建新的统一添加函数
+        function addParticipantAndProcessInitiative(participant) {
+            // 通过检查场上第一个单位是否有先攻值，来判断战斗是否已开始
+            const isBattleInProgress = battle.participants.length > 0 && battle.participants[0].initiative !== null;
+
+            if (isBattleInProgress) {
+                // 战斗已开始：自动投骰并排序
+                const init = utils.rollSingleInitiative(participant);
+                Object.assign(participant, init); // 将投骰结果合并到 participant 对象
+
+                // 添加一个用完即弃的临时标记，用于处理首回合跳过逻辑
+                participant.justJoined = true;
+                
+                battle.participants.push(participant);
+
+                // 采用 push + sort 的方式，保证排序的绝对可靠性
+                battle.participants.sort((a, b) => {
+                    const aNatural20 = a.initiativeRoll === 20;
+                    const bNatural20 = b.initiativeRoll === 20;
+                    if (aNatural20 && !bNatural20) return -1;
+                    if (!aNatural20 && bNatural20) return 1;
+                    if (aNatural20 && bNatural20) return (b.initiativeModifier || 0) - (a.initiativeModifier || 0);
+                    return (b.initiative || 0) - (a.initiative || 0);
+                });
+                
+                // 可选但推荐：更新当前行动者索引，防止排序后高亮目标错乱
+                if (currentActor.value) {
+                    const newIdx = battle.participants.findIndex(p => p.uid === currentActor.value.uid);
+                    if (newIdx !== -1) battle.currentIndex = newIdx;
+                }
+            } else {
+                // 战斗未开始：直接添加，等待手动掷先攻
+                battle.participants.push(participant);
+            }
+        }
+        
         function addToBattleFromEditor(entity, type) {
             const p = standardizeToParticipant(entity);
-            battle.participants.push(p);
+            addParticipantAndProcessInitiative(p); // <-- 调用新函数
             if (type === 'monster') ui.monsterEditor.open = false;
             else if (type === 'pc') ui.pcEditor.open = false;
             route.value = 'battle';
             toast(`${p.name} 已加入战斗`);
         }
         function addToBattleFromMonster(m) {
-            battle.participants.push(standardizeToParticipant(m));
+            addParticipantAndProcessInitiative(standardizeToParticipant(m)); // <-- 调用新函数
             route.value = 'battle';
             toast('已加入战斗');
         }
         function addToBattleFromPC(pc) {
-            battle.participants.push(standardizeToParticipant(pc));
+            addParticipantAndProcessInitiative(standardizeToParticipant(pc)); // <-- 调用新函数
             route.value = 'battle';
             toast('已加入战斗');
         }
@@ -484,12 +521,12 @@ createApp({
             for (let i = 0; i < count; i++) {
                 const p = standardizeToParticipant(m);
                 if (count > 1) p.name = `${m.name} #${i + 1}`;
-                battle.participants.push(p);
+                addParticipantAndProcessInitiative(p); // <-- 调用新函数
             }
             toast('怪物已加入');
         }
         function addParticipantsFromPC(pc) {
-            battle.participants.push(standardizeToParticipant(pc));
+            addParticipantAndProcessInitiative(standardizeToParticipant(pc)); // <-- 调用新函数
             toast('PC已加入');
         }
 
@@ -681,11 +718,9 @@ createApp({
         // Turn & Initiative
         function rollInitiative() {
             for (const p of battle.participants) {
-                const dexModifier = utils.abilityMod(p.abilities.dex || 10); // MODIFIED
-                const d20Roll = Math.floor(Math.random() * 20) + 1;
-                p.initiativeRoll = d20Roll;
-                p.initiativeModifier = dexModifier;
-                p.initiative = d20Roll + dexModifier;
+                const initResult = utils.rollSingleInitiative(p);
+                Object.assign(p, initResult);
+                delete p.justJoined; // <-- 新增: 确保全体重投时清除所有临时标记
             }
             battle.participants.sort((a, b) => {
                 const aNatural20 = a.initiativeRoll === 20;
@@ -705,6 +740,28 @@ createApp({
         }
         function nextTurn() {
             if (!battle.participants.length) return;
+            
+            // 新增逻辑：在所有操作前，检查当前行动者是否是刚加入的
+            const actor = currentActor.value;
+            if (actor && actor.justJoined) {
+                delete actor.justJoined; // 移除标记，此逻辑只触发一次
+                toast(`【${actor.name}】在本轮加入，其首个回合将被跳过。`);
+                
+                // 立即进入下一回合，实现跳过效果
+                battle.currentIndex++;
+                if (battle.currentIndex >= battle.participants.length) {
+                    battle.currentIndex = 0;
+                    battle.round++;
+                }
+                // 为新的当前行动者结算状态和冷却
+                if (currentActor.value) {
+                    decrementParticipantStatuses(currentActor.value);
+                    decrementActionCooldowns(currentActor.value);
+                }
+                return; // 提前结束本次函数执行，因为已经处理了回合推进
+            }
+
+            // 原有的 nextTurn 逻辑
             const activeParticipant = currentActor.value;
             let participantWasRemoved = false;
             if (activeParticipant && activeParticipant.hpCurrent <= 0 && activeParticipant.type === 'monster') {
@@ -1163,7 +1220,7 @@ createApp({
                         if (groupMonster.count > 1) {
                             p.name = `${monsterTemplate.name} #${i + 1}`;
                         }
-                        battle.participants.push(p);
+                        addParticipantAndProcessInitiative(p); // <-- 调用新函数
                         addedCount++;
                     }
                 }

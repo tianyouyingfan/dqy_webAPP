@@ -978,3 +978,63 @@ body.loading #app {
 #app {
   transition: opacity 0.4s ease-in-out;
 }
+
+/* 先攻序列编辑器容器 */
+.initiative-editor-list {
+    background: var(--panel);
+    border: 1px dashed var(--accent); /* 虚线边框明确提示处于编辑模式 */
+    border-radius: var(--radius);
+    padding: 10px;
+    overflow: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 紧凑型卡片 */
+.compact-tile {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 5px; 
+    width: 80px;  
+    height: 100px; 
+    background: #1a1d21;
+    border: 1px solid #3b4653;
+    border-radius: 10px;
+    padding: 10px 0; 
+    transition: all 0.2s ease-in-out;
+    cursor: grab;
+}
+.compact-tile:hover {
+    border-color: #5f6b7c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.compact-tile.active-turn-highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
+}
+
+.compact-tile .drag-handle {
+    color: var(--muted);
+}
+
+.compact-tile-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+}
+
+.compact-tile-init {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.1em;
+    padding: 2px 8px;
+    background-color: #101214;
+    border-radius: 6px;
+}

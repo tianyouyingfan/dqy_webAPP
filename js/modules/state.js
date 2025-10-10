@@ -160,6 +160,7 @@ export const ui = reactive({
     autoApplyDamage: true,
     selectedTargets: [],
     log: '',
+    isEditingInitiative: false, // 新增: 用于切换先攻序列的查看/编辑模式
     notificationQueue: [],
     critNotification: {
         open: false,

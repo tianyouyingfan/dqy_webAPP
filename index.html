@@ -146,8 +146,10 @@
             <!-- 战斗主界面（三区布局） -->
             <section v-if="route==='battle'">
                 <div class="battle">
-                    <!-- 顶部先攻序列条（20%） -->
-                    <div class="initiative-bar hscroll" @dragover.prevent>
+                    <!-- 顶部先攻序列条: 根据状态条件渲染 -->
+                    
+                    <!-- 查看模式 (v-if) -->
+                    <div v-if="!ui.isEditingInitiative" class="initiative-bar hscroll" @dragover.prevent>
                         <div v-for="(p, idx) in battle.participants" :key="p.uid" class="init-tile"
                             :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid}"
                             :ref="(el) => { if (el) participantTiles.set(p.uid, el); }" draggable="true"
@@ -178,6 +180,22 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- 编辑模式 (v-else) -->
+                    <div v-else class="initiative-editor-list hscroll" @dragover.prevent>
+                        <div v-for="(p, idx) in battle.participants" :key="p.uid" class="compact-tile"
+                            :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid}"
+                            draggable="true" @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
+                            <div class="drag-handle" title="拖拽调整顺序">⠿</div>
+                            <div class="avatar">
+                                <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
+                                <span v-else>🎯</span>
+                            </div>
+                            <div class="compact-tile-name">{{ p.name }}</div>
+                            <div class="spacer"></div>
+                            <div class="compact-tile-init">{{ p.initiative ?? '—' }}</div>
+                        </div>
+                    </div>
 
                     <!-- 下方左右两侧（各50%） -->
                     <div class="battle-grid">
@@ -189,6 +207,10 @@
                                 <button class="btn" @click="prevTurn()">上一个</button>
                                 <button class="btn primary" @click="nextTurn()">下一个</button>
                                 <button class="btn warn" @click="resetBattle()">初始化战斗</button>
+                                <!-- 新增: 编辑模式切换按钮 -->
+                                <button class="btn" @click="ui.isEditingInitiative = !ui.isEditingInitiative">
+                                    {{ ui.isEditingInitiative ? '完成编辑' : '编辑先攻序列' }}
+                                </button>
                                 <span class="pill right">回合：{{battle.round}}</span>
                             </div>
                             <template v-if="currentActor">
