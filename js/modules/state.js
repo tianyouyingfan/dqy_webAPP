@@ -165,7 +165,16 @@ export const ui = reactive({
         open: false,
         type: 'success', // 'success' or 'failure'
         attacker: '',
-        target: ''
+        target: '',
+        toHitRoll: '',
+        toHitResult: 0,
+        targetAC: 0,
+        damageExpression: '',
+        damageRolls: '',
+        rawDamage: 0,
+        finalDamage: 0,
+        damageType: '',
+        damageModifierInfo: '',
     },
     normalHitNotification: {
         open: false,
@@ -202,10 +211,10 @@ export const quickDamageInput = ref(null);
 export const quickRollInput = ref(null);
 export const participantTiles = ref(new Map());
 export const currentActor = computed(() => battle.participants[battle.currentIndex] || null);
-export const sortedCurrentActorActions = computed(() => sortActionsByType(currentActor.value?.actions));
-export const sortedActorViewerActions = computed(() => sortActionsByType(ui.actorViewer.actor?.actions));
-export const sortedMonsterDraftActions = computed(() => sortActionsByType(uiState.monsterDraft?.actions));
-export const sortedPcDraftActions = computed(() => sortActionsByType(uiState.pcDraft?.actions));
+export const sortedCurrentActorActions = computed(() => []);
+export const sortedActorViewerActions = computed(() => []);
+export const sortedMonsterDraftActions = computed(() => []);
+export const sortedPcDraftActions = computed(() => []);
 
 // 怪物编辑器草稿
 export const emptyMonster = () => ({

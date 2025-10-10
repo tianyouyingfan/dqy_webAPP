@@ -563,9 +563,11 @@ summary.section-title {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 24px;
-    text-align: center;
     border: 3px solid transparent;
     animation: fadeInOut 3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .crit-notification-modal.success {
@@ -578,15 +580,10 @@ summary.section-title {
     box-shadow: 0 0 30px var(--danger);
 }
 
-.crit-info {
-    font-size: 1.5em;
-    color: var(--muted);
-    margin-bottom: 12px;
-}
-
 .crit-text {
     font-size: 4em;
     font-weight: 700;
+    text-align: center;
 }
 
 .crit-notification-modal.success .crit-text {

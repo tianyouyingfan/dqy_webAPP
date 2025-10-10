@@ -1604,8 +1604,35 @@
         <!-- 模态：大成功/大失败提示 -->
         <div v-if="ui.critNotification.open" class="crit-notification-mask">
             <div class="crit-notification-modal" :class="ui.critNotification.type">
-                <div class="crit-info">{{ ui.critNotification.attacker }} ⚔️ {{ ui.critNotification.target }}</div>
+                <div class="hit-info-header" style="border-bottom: none; padding-bottom: 0;">
+                    <span>{{ ui.critNotification.attacker }} ⚔️ {{ ui.critNotification.target }}</span>
+                    <span class="hit-roll-display">
+                        命中检定: {{ ui.critNotification.toHitRoll }} =
+                        <span class="hit-result">{{ ui.critNotification.toHitResult }}</span> vs AC {{
+                        ui.critNotification.targetAC }}
+                    </span>
+                </div>
+
                 <div class="crit-text">{{ ui.critNotification.type === 'success' ? '大成功' : '大失败' }}</div>
+
+                <template v-if="ui.critNotification.type === 'success'">
+                    <div class="damage-details">
+                        <div class="damage-expression">{{ ui.critNotification.damageExpression }} (重击)</div>
+                        <div class="damage-calculation">
+                            {{ ui.critNotification.damageRolls }} = <span class="raw-damage">{{
+                                ui.critNotification.rawDamage }}</span> {{ ui.critNotification.damageType }}
+                        </div>
+                    </div>
+                    <div class="final-damage-section">
+                        <div class="final-damage-value">
+                            {{ ui.critNotification.finalDamage }}
+                        </div>
+                        <div class="final-damage-label">
+                            最终伤害 {{ ui.critNotification.damageModifierInfo }}
+                        </div>
+                    </div>
+                </template>
+
                 <button class="btn" @click="dismissCurrentNotification" style="margin-top: 20px;">关闭</button>
             </div>
         </div>

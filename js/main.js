@@ -890,9 +890,6 @@ createApp({
                     const toHit = d20.value + (action.attackBonus || 0);
                     const hit = (d20.value === 20) || (toHit >= t.ac);
                     log += `- 目标【${t.name}】 -> d20(${d20.raw.join(',')}) + ${action.attackBonus || 0} = ${toHit} vs AC ${t.ac} => ${d20.isCrit ? '重击' : (hit ? '命中' : '未命中')}\n`;
-                    if (d20.isCrit || d20.isFumble) {
-                        ui.notificationQueue.push({ type: 'crit', data: { type: d20.isCrit ? 'success' : 'failure', attacker: actor.name, target: t.name } });
-                    }
                     if (hit && !d20.isFumble) {
                         let totalFinalDamage = 0;
                         let damageLogParts = [];
@@ -922,6 +919,36 @@ createApp({
                                 });
                                 notificationShown = true;
                             }
+                        }
+                        
+                        // 处理大成功情况
+                        if (d20.isCrit) {
+                            let damageModifierInfo = '';
+                            // 获取第一个伤害类型作为大成功的伤害类型
+                            const firstDamage = action.damages[0];
+                            const rawDmgAmount = totalFinalDamage; // 使用已经计算好的总伤害
+                            
+                            // 重新计算第一个伤害类型的详细信息
+                            const firstDmgDetails = utils.rollDamageWithDetails(firstDamage.dice, d20.isCrit, firstDamage.type);
+                            
+                            ui.notificationQueue.push({
+                                type: 'crit',
+                                data: {
+                                    type: 'success',
+                                    attacker: actor.name,
+                                    target: t.name,
+                                    toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
+                                    toHitResult: toHit,
+                                    targetAC: t.ac,
+                                    damageExpression: `${firstDamage.dice} ${firstDamage.type}`,
+                                    damageRolls: `(${firstDmgDetails.rolls.join(' + ')}) + ${firstDmgDetails.flat}`,
+                                    rawDamage: rawDmgAmount,
+                                    finalDamage: totalFinalDamage,
+                                    damageType: firstDamage.type,
+                                    damageModifierInfo: damageModifierInfo,
+                                }
+                            });
+                            notificationShown = true;
                         }
                         log += ` 伤害: ${damageLogParts.join(' + ')} = 总计 ${totalFinalDamage} 伤害\n`;
                         if (ui.autoApplyDamage) {
@@ -954,6 +981,24 @@ createApp({
                             data: {
                                 attacker: actor.name, target: t.name, toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
                                 toHitResult: toHit, targetAC: t.ac,
+                            }
+                        });
+                    } else if (d20.isFumble) {
+                        ui.notificationQueue.push({
+                            type: 'crit',
+                            data: {
+                                type: 'failure',
+                                attacker: actor.name,
+                                target: t.name,
+                                toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
+                                toHitResult: toHit,
+                                targetAC: t.ac,
+                                damageExpression: '',
+                                damageRolls: '',
+                                rawDamage: 0,
+                                finalDamage: 0,
+                                damageType: '',
+                                damageModifierInfo: '',
                             }
                         });
                     }
