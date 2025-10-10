@@ -891,64 +891,62 @@ createApp({
                     const hit = (d20.value === 20) || (toHit >= t.ac);
                     log += `- 目标【${t.name}】 -> d20(${d20.raw.join(',')}) + ${action.attackBonus || 0} = ${toHit} vs AC ${t.ac} => ${d20.isCrit ? '重击' : (hit ? '命中' : '未命中')}\n`;
                     if (hit && !d20.isFumble) {
+                        let allDamageDetails = [];
                         let totalFinalDamage = 0;
-                        let damageLogParts = [];
-                        let notificationShown = false;
+
                         for (const damage of action.damages) {
                             if (!damage.dice) continue;
                             const dmgDetails = utils.rollDamageWithDetails(damage.dice, d20.isCrit, damage.type); // MODIFIED
                             const rawDmgAmount = dmgDetails.total;
                             const finalDmgAmount = calculateModifiedDamage(t, rawDmgAmount, damage.type);
                             totalFinalDamage += finalDmgAmount;
-                            let partLog = `${rawDmgAmount} ${damage.type}`;
-                            if (finalDmgAmount !== rawDmgAmount) partLog += ` (变为 ${finalDmgAmount})`;
-                            damageLogParts.push(partLog);
-                            if (hit && !d20.isCrit && !notificationShown) {
-                                let damageModifierInfo = '';
-                                if (finalDmgAmount < rawDmgAmount) damageModifierInfo = '（抗性）';
-                                if (finalDmgAmount > rawDmgAmount) damageModifierInfo = '（易伤）';
-                                if (finalDmgAmount === 0 && rawDmgAmount > 0) damageModifierInfo = '（免疫）';
+
+                            let modifier = '';
+                            if (finalDmgAmount < rawDmgAmount) modifier = '抗性';
+                            else if (finalDmgAmount > rawDmgAmount) modifier = '易伤';
+                            else if (finalDmgAmount === 0 && rawDmgAmount > 0) modifier = '免疫';
+
+                            allDamageDetails.push({
+                                rawAmount: rawDmgAmount,
+                                finalAmount: finalDmgAmount,
+                                type: damage.type,
+                                modifier: modifier
+                            });
+                        }
+
+                        if (allDamageDetails.length > 0) {
+                            if (d20.isCrit) {
+                                ui.notificationQueue.push({
+                                    type: 'crit',
+                                    data: {
+                                        type: 'success',
+                                        attacker: actor.name, target: t.name,
+                                        toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
+                                        toHitResult: toHit, targetAC: t.ac,
+                                        damages: allDamageDetails,
+                                        totalFinalDamage: totalFinalDamage
+                                    }
+                                });
+                            } else {
                                 ui.notificationQueue.push({
                                     type: 'hit',
                                     data: {
-                                        attacker: actor.name, target: t.name, toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
-                                        toHitResult: toHit, targetAC: t.ac, damageExpression: `${damage.dice} ${damage.type}`,
-                                        damageRolls: `(${dmgDetails.rolls.join(' + ')}) + ${dmgDetails.flat}`, rawDamage: rawDmgAmount,
-                                        finalDamage: finalDmgAmount, damageType: damage.type, damageModifierInfo: damageModifierInfo,
+                                        attacker: actor.name, target: t.name,
+                                        toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
+                                        toHitResult: toHit, targetAC: t.ac,
+                                        damages: allDamageDetails,
+                                        totalFinalDamage: totalFinalDamage
                                     }
                                 });
-                                notificationShown = true;
                             }
                         }
                         
-                        // 处理大成功情况
-                        if (d20.isCrit) {
-                            let damageModifierInfo = '';
-                            // 获取第一个伤害类型作为大成功的伤害类型
-                            const firstDamage = action.damages[0];
-                            const rawDmgAmount = totalFinalDamage; // 使用已经计算好的总伤害
-                            
-                            // 重新计算第一个伤害类型的详细信息
-                            const firstDmgDetails = utils.rollDamageWithDetails(firstDamage.dice, d20.isCrit, firstDamage.type);
-                            
-                            ui.notificationQueue.push({
-                                type: 'crit',
-                                data: {
-                                    type: 'success',
-                                    attacker: actor.name,
-                                    target: t.name,
-                                    toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
-                                    toHitResult: toHit,
-                                    targetAC: t.ac,
-                                    damageExpression: `${firstDamage.dice} ${firstDamage.type}`,
-                                    damageRolls: `(${firstDmgDetails.rolls.join(' + ')}) + ${firstDmgDetails.flat}`,
-                                    rawDamage: rawDmgAmount,
-                                    finalDamage: totalFinalDamage,
-                                    damageType: firstDamage.type,
-                                    damageModifierInfo: damageModifierInfo,
-                                }
-                            });
-                            notificationShown = true;
+                        // 更新日志部分
+                        let damageLogParts = [];
+                        for (const detail of allDamageDetails) {
+                            let partLog = `${detail.rawAmount} ${detail.type}`;
+                            if (detail.finalAmount !== detail.rawAmount) partLog += ` (变为 ${detail.finalAmount})`;
+                            damageLogParts.push(partLog);
                         }
                         log += ` 伤害: ${damageLogParts.join(' + ')} = 总计 ${totalFinalDamage} 伤害\n`;
                         if (ui.autoApplyDamage) {
@@ -993,12 +991,8 @@ createApp({
                                 toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
                                 toHitResult: toHit,
                                 targetAC: t.ac,
-                                damageExpression: '',
-                                damageRolls: '',
-                                rawDamage: 0,
-                                finalDamage: 0,
-                                damageType: '',
-                                damageModifierInfo: '',
+                                damages: [],
+                                totalFinalDamage: 0,
                             }
                         });
                     }

@@ -169,12 +169,8 @@ export const ui = reactive({
         toHitRoll: '',
         toHitResult: 0,
         targetAC: 0,
-        damageExpression: '',
-        damageRolls: '',
-        rawDamage: 0,
-        finalDamage: 0,
-        damageType: '',
-        damageModifierInfo: '',
+        damages: [], // 存储每段伤害的详情对象 { rawAmount, finalAmount, type, modifier }
+        totalFinalDamage: 0, // 存储所有伤害段落的最终总和
     },
     normalHitNotification: {
         open: false,
@@ -183,12 +179,8 @@ export const ui = reactive({
         toHitRoll: '',
         toHitResult: 0,
         targetAC: 0,
-        damageExpression: '',
-        damageRolls: '',
-        rawDamage: 0,
-        finalDamage: 0,
-        damageType: '',
-        damageModifierInfo: '',
+        damages: [], // 存储每段伤害的详情对象 { rawAmount, finalAmount, type, modifier }
+        totalFinalDamage: 0, // 存储所有伤害段落的最终总和
     },
     missNotification: {
         open: false,
