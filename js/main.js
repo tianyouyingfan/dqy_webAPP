@@ -167,8 +167,37 @@ createApp({
 
         // Actor Viewer
         function openActorViewer(actor) {
-            ui.actorViewer.actor = utils.deepClone(actor); // MODIFIED
+            ui.actorViewer.isEditing = false; // 新增：重置编辑状态
+            ui.actorViewer.draft = null;      // 新增：清空旧草稿
+            ui.actorViewer.actor = actor;     // 修改：移除 deepClone
             ui.actorViewer.open = true;
+        }
+        
+        // 新增：开始编辑生物详情
+        function startActorViewerEdit() {
+            if (!ui.actorViewer.actor) return;
+            ui.actorViewer.draft = utils.deepClone(ui.actorViewer.actor);
+            ui.actorViewer.isEditing = true;
+        }
+
+        // 新增：取消编辑生物详情
+        function cancelActorViewerEdit() {
+            ui.actorViewer.isEditing = false;
+            ui.actorViewer.draft = null;
+        }
+
+        // 新增：保存生物详情的更改
+        function saveActorViewerChanges() {
+            if (!ui.actorViewer.actor || !ui.actorViewer.draft) return;
+            
+            // 使用 Object.assign 高效合并更改
+            Object.assign(ui.actorViewer.actor, ui.actorViewer.draft);
+
+            // 确保当前HP不超过新的HP上限
+            ui.actorViewer.actor.hpCurrent = Math.min(ui.actorViewer.actor.hpCurrent, ui.actorViewer.actor.hpMax);
+            
+            toast(`${ui.actorViewer.actor.name} 的临时数据已更新`);
+            cancelActorViewerEdit(); // 保存后重置状态
         }
 
         // Monster CRUD
@@ -1321,7 +1350,8 @@ createApp({
             sortedMonsterDraftActions, sortedPcDraftActions,
             // Methods
             toast, removeToast, loadAll, seedDemo, toggleTypeFilter, toggleMonsterDraftType,
-            toggleDamageModifier, toggleConditionImmunity, openActorViewer, openMonsterEditor,
+            toggleDamageModifier, toggleConditionImmunity, openActorViewer, startActorViewerEdit,
+            cancelActorViewerEdit, saveActorViewerChanges, openMonsterEditor,
             updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster, openPCEditor,
             savePC, deletePC, openAbilityPool, openAbilityEditor, saveAbility, deleteAbility,
             attachAbilityToDraft, openActionPool, attachActionToDraft, openActionsViewer,

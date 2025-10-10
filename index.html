@@ -382,6 +382,9 @@
                 <div class="row">
                     <div class="title">生物详情</div>
                     <div class="spacer"></div>
+                    <button class="btn" v-if="!ui.actorViewer.isEditing" @click="startActorViewerEdit">编辑</button>
+                    <button class="btn ok" v-if="ui.actorViewer.isEditing" @click="saveActorViewerChanges">保存</button>
+                    <button class="btn" v-if="ui.actorViewer.isEditing" @click="cancelActorViewerEdit">取消</button>
                     <button class="btn" @click="ui.actorViewer.open=false">关闭</button>
                 </div>
                 <div class="hl"></div>
@@ -397,9 +400,12 @@
                         <div class="col">
                             <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
                             <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill">AC {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill">HP {{ui.actorViewer.actor.hpCurrent}} /
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
+                                <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} /
                                     {{ui.actorViewer.actor.hpMax}}</span>
+                                <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> /
+                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
                             </div>
                         </div>
                     </div>
@@ -408,7 +414,10 @@
                     <div class="ability-grid">
                         <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
                             <div class="muted small">{{k.toUpperCase()}}</div>
-                            <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                            <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                            <div v-else>
+                                <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]"> ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                            </div>
                         </div>
                     </div>
                     <div class="hl"></div>
@@ -482,11 +491,15 @@
                                 <span class="pill mono">CR {{ui.actorViewer.actor.cr}}</span>
                             </div>
                             <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill">AC {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill">HP {{ui.actorViewer.actor.hpCurrent}} /
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
+                                <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} /
                                     {{ui.actorViewer.actor.hpMax}}</span>
-                                <span class="pill">速度 {{(ui.actorViewer.actor.speed && ui.actorViewer.actor.speed.walk)
+                                <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> /
+                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">速度 {{(ui.actorViewer.actor.speed && ui.actorViewer.actor.speed.walk)
                                     || '?'}}ft</span>
+                                <span class="pill" v-else>速度 <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.speed.walk">ft</span>
                                 <span class="pill">{{ (ui.actorViewer.actor.monsterType||[]).map(translateType).join(',') || '未分类' }}</span>
                             </div>
                             <div class="hl"></div>
@@ -494,7 +507,10 @@
                             <div class="ability-grid">
                                 <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
                                     <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                    <div v-else>
+                                        <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]"> ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                    </div>
                                 </div>
                             </div>
                             <div class="hl"></div>

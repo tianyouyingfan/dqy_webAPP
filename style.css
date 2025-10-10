@@ -1038,3 +1038,25 @@ body.loading #app {
     background-color: #101214;
     border-radius: 6px;
 }
+
+.inline-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--muted);
+    color: var(--text);
+    font-family: var(--font);
+    font-weight: 700;
+    width: 45px;
+    text-align: center;
+    padding: 2px;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+}
+.inline-input:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+    background: rgba(255,255,255,0.05);
+}
+.ability .inline-input {
+    width: 60px; /* 让属性区的输入框稍宽一些 */
+}

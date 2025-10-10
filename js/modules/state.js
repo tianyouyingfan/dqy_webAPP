@@ -69,6 +69,8 @@ export const ui = reactive({
     actorViewer: {
         open: false,
         actor: null,
+        isEditing: false, // 新增：编辑状态标志
+        draft: null,      // 新增：编辑时的数据草稿
     },
     monsterEditor: {
         open: false,
