@@ -1348,8 +1348,8 @@
                 <div class="title">裁剪图片</div>
                 <div class="hl"></div>
                 <div style="max-height: 60vh; overflow: auto; text-align: center; position: relative;">
-                    <canvas ref="cropperCanvas" @mousedown="startDrag" @mousemove="drag" @mouseup="endDrag"
-                        @mouseleave="endDrag"></canvas>
+                    <canvas ref="cropperCanvas" @mousedown="startBgDrag" @mousemove="bgDrag" @mouseup="endBgDrag"
+                        @mouseleave="endBgDrag"></canvas>
                 </div>
                 <div class="hl"></div>
                 <div class="row">
@@ -1366,8 +1366,8 @@
                 <div class="title">裁剪头像</div>
                 <div class="hl"></div>
                 <div style="max-height: 60vh; overflow: auto; text-align: center; position: relative;">
-                    <canvas ref="avatarCropperCanvas" @mousedown="startDrag" @mousemove="drag" @mouseup="endDrag"
-                        @mouseleave="endDrag"></canvas>
+                    <canvas ref="avatarCropperCanvas" @mousedown="startAvatarDrag" @mousemove="avatarDrag" @mouseup="endAvatarDrag"
+                        @mouseleave="endAvatarDrag"></canvas>
                 </div>
                 <div class="hl"></div>
                 <div class="row">

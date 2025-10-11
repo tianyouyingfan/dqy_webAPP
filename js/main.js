@@ -561,14 +561,23 @@ createApp({
         }
 
         // Image Cropping (No changes needed here, as it's self-contained logic)
+        // DOM 引用
         const cropperCanvas = ref(null);
         const cropperModal = ref(null);
         const avatarCropperCanvas = ref(null);
         const avatarCropperModal = ref(null);
-        let cropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
-        let isDragging = false;
-        let dragStart = { x: 0, y: 0 };
-        let sourceImage = null;
+        
+        // 背景裁剪器 (Background Cropper) 状态
+        let bgCropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
+        let isBgDragging = false;
+        let bgDragStart = { x: 0, y: 0 };
+        let bgSourceImage = null;
+        
+        // 头像裁剪器 (Avatar Cropper) 状态
+        let avatarCropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
+        let isAvatarDragging = false;
+        let avatarDragStart = { x: 0, y: 0 };
+        let avatarSourceImage = null;
         function onBgImageSelect(e) {
             const file = e.target.files[0];
             if (file) {
@@ -587,7 +596,7 @@ createApp({
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            sourceImage = img;
+            bgSourceImage = img;
             img.onload = () => {
                 const modalWidth = cropperModal.value?.clientWidth || 680;
                 const canvasWidth = Math.min(img.width, modalWidth - 24);
@@ -597,10 +606,10 @@ createApp({
                 canvas.height = canvasHeight;
                 const boxWidth = canvasWidth * 0.8;
                 const boxHeight = boxWidth / ui.imageCropper.aspectRatio;
-                cropBox.x = (canvasWidth - boxWidth) / 2;
-                cropBox.y = (canvasHeight - boxHeight) / 2;
-                cropBox.width = boxWidth;
-                cropBox.height = boxHeight;
+                bgCropBox.x = (canvasWidth - boxWidth) / 2;
+                bgCropBox.y = (canvasHeight - boxHeight) / 2;
+                bgCropBox.width = boxWidth;
+                bgCropBox.height = boxHeight;
                 drawCropper();
             };
             img.src = ui.imageCropper.imageUrl;
@@ -609,61 +618,86 @@ createApp({
             const canvas = cropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bgSourceImage, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.clearRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
-            ctx.drawImage(sourceImage,
-                (cropBox.x / canvas.width) * sourceImage.width, (cropBox.y / canvas.height) * sourceImage.height,
-                (cropBox.width / canvas.width) * sourceImage.width, (cropBox.height / canvas.height) * sourceImage.height,
-                cropBox.x, cropBox.y, cropBox.width, cropBox.height
+            ctx.clearRect(bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height);
+            ctx.drawImage(bgSourceImage,
+                (bgCropBox.x / canvas.width) * bgSourceImage.width, (bgCropBox.y / canvas.height) * bgSourceImage.height,
+                (bgCropBox.width / canvas.width) * bgSourceImage.width, (bgCropBox.height / canvas.height) * bgSourceImage.height,
+                bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height
             );
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 2;
-            ctx.strokeRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+            ctx.strokeRect(bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height);
         }
-        function startDrag(e) {
+        // 背景裁剪器拖动事件处理器
+        function startBgDrag(e) {
             const canvas = e.target;
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-            if (mouseX > cropBox.x && mouseX < cropBox.x + cropBox.width &&
-                mouseY > cropBox.y && mouseY < cropBox.y + cropBox.height) {
-                isDragging = true;
-                dragStart.x = mouseX - cropBox.x;
-                dragStart.y = mouseY - cropBox.y;
+            if (mouseX > bgCropBox.x && mouseX < bgCropBox.x + bgCropBox.width &&
+                mouseY > bgCropBox.y && mouseY < bgCropBox.y + bgCropBox.height) {
+                isBgDragging = true;
+                bgDragStart.x = mouseX - bgCropBox.x;
+                bgDragStart.y = mouseY - bgCropBox.y;
             }
         }
-        function drag(e) {
-            if (isDragging) {
+        function bgDrag(e) {
+            if (isBgDragging) {
                 const canvas = e.target;
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                cropBox.x = utils.clamp(mouseX - dragStart.x, 0, canvas.width - cropBox.width); // MODIFIED
-                cropBox.y = utils.clamp(mouseY - dragStart.y, 0, canvas.height - cropBox.height); // MODIFIED
-                if (ui.avatarCropper.open) {
-                    drawAvatarCropper();
-                } else {
-                    drawCropper();
-                }
+                bgCropBox.x = utils.clamp(mouseX - bgDragStart.x, 0, canvas.width - bgCropBox.width);
+                bgCropBox.y = utils.clamp(mouseY - bgDragStart.y, 0, canvas.height - bgCropBox.height);
+                drawCropper();
             }
         }
-        function endDrag() {
-            isDragging = false;
+        function endBgDrag() {
+            isBgDragging = false;
+        }
+
+        // 头像裁剪器拖动事件处理器
+        function startAvatarDrag(e) {
+            const canvas = e.target;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            if (mouseX > avatarCropBox.x && mouseX < avatarCropBox.x + avatarCropBox.width &&
+                mouseY > avatarCropBox.y && mouseY < avatarCropBox.y + avatarCropBox.height) {
+                isAvatarDragging = true;
+                avatarDragStart.x = mouseX - avatarCropBox.x;
+                avatarDragStart.y = mouseY - avatarCropBox.y;
+            }
+        }
+        function avatarDrag(e) {
+            if (isAvatarDragging) {
+                const canvas = e.target;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                avatarCropBox.x = utils.clamp(mouseX - avatarDragStart.x, 0, canvas.width - avatarCropBox.width);
+                avatarCropBox.y = utils.clamp(mouseY - avatarDragStart.y, 0, canvas.height - avatarCropBox.height);
+                drawAvatarCropper();
+            }
+        }
+        function endAvatarDrag() {
+            isAvatarDragging = false;
         }
         function confirmCrop() {
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = sourceImage.width / cropperCanvas.value.width;
-            const scaleY = sourceImage.height / cropperCanvas.value.height;
-            const sourceX = cropBox.x * scaleX;
-            const sourceY = cropBox.y * scaleY;
-            const sourceWidth = cropBox.width * scaleX;
-            const sourceHeight = cropBox.height * scaleY;
+            const scaleX = bgSourceImage.width / cropperCanvas.value.width;
+            const scaleY = bgSourceImage.height / cropperCanvas.value.height;
+            const sourceX = bgCropBox.x * scaleX;
+            const sourceY = bgCropBox.y * scaleY;
+            const sourceWidth = bgCropBox.width * scaleX;
+            const sourceHeight = bgCropBox.height * scaleY;
             tempCanvas.width = sourceWidth;
             tempCanvas.height = sourceHeight;
-            tempCtx.drawImage(sourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+            tempCtx.drawImage(bgSourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
             
             // 根据当前编辑器类型设置背景图片
             const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
@@ -693,7 +727,7 @@ createApp({
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            sourceImage = img;
+            avatarSourceImage = img;
             img.onload = () => {
                 const modalWidth = avatarCropperModal.value?.clientWidth || 680;
                 const canvasWidth = Math.min(img.width, modalWidth - 24);
@@ -702,10 +736,10 @@ createApp({
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
                 const boxSize = Math.min(canvasWidth, canvasHeight) * 0.8;
-                cropBox.x = (canvasWidth - boxSize) / 2;
-                cropBox.y = (canvasHeight - boxSize) / 2;
-                cropBox.width = boxSize;
-                cropBox.height = boxSize;
+                avatarCropBox.x = (canvasWidth - boxSize) / 2;
+                avatarCropBox.y = (canvasHeight - boxSize) / 2;
+                avatarCropBox.width = boxSize;
+                avatarCropBox.height = boxSize;
                 drawAvatarCropper();
             };
             img.src = ui.avatarCropper.imageUrl;
@@ -714,17 +748,17 @@ createApp({
             const canvas = avatarCropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(avatarSourceImage, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.beginPath();
-            ctx.arc(cropBox.x + cropBox.width / 2, cropBox.y + cropBox.height / 2, cropBox.width / 2, 0, Math.PI * 2, true);
+            ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
             ctx.clip();
-            ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(avatarSourceImage, 0, 0, canvas.width, canvas.height);
             ctx.restore();
             ctx.beginPath();
-            ctx.arc(cropBox.x + cropBox.width / 2, cropBox.y + cropBox.height / 2, cropBox.width / 2, 0, Math.PI * 2, true);
+            ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -732,18 +766,18 @@ createApp({
         function confirmAvatarCrop() {
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = sourceImage.width / avatarCropperCanvas.value.width;
-            const scaleY = sourceImage.height / avatarCropperCanvas.value.height;
-            const sourceX = cropBox.x * scaleX;
-            const sourceY = cropBox.y * scaleY;
-            const sourceWidth = cropBox.width * scaleX;
-            const sourceHeight = cropBox.height * scaleY;
+            const scaleX = avatarSourceImage.width / avatarCropperCanvas.value.width;
+            const scaleY = avatarSourceImage.height / avatarCropperCanvas.value.height;
+            const sourceX = avatarCropBox.x * scaleX;
+            const sourceY = avatarCropBox.y * scaleY;
+            const sourceWidth = avatarCropBox.width * scaleX;
+            const sourceHeight = avatarCropBox.height * scaleY;
             tempCanvas.width = sourceWidth;
             tempCanvas.height = sourceHeight;
             tempCtx.beginPath();
             tempCtx.arc(sourceWidth / 2, sourceHeight / 2, sourceWidth / 2, 0, Math.PI * 2, true);
             tempCtx.clip();
-            tempCtx.drawImage(sourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+            tempCtx.drawImage(avatarSourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
             const dataUrl = tempCanvas.toDataURL('image/png');
             if (ui.activeEditor === 'monster') {
                 uiState.monsterDraft.avatar = dataUrl;
@@ -1367,8 +1401,8 @@ createApp({
             openActionEditor, openActionEditorForDraft, saveAction, addDamageToActionDraft,
             deleteAction, autoAdjustCR, resetBattle, standardizeToParticipant, addToBattleFromEditor,
             addToBattleFromMonster, addToBattleFromPC, promptAddParticipants, addParticipantsFromMonster,
-            addParticipantsFromPC, onBgImageSelect, initCropper, drawCropper, startDrag, drag, endDrag,
-            confirmCrop, onAvatarImageSelect, initAvatarCropper, drawAvatarCropper, confirmAvatarCrop,
+            addParticipantsFromPC, onBgImageSelect, initCropper, drawCropper, startBgDrag, bgDrag, endBgDrag,
+            confirmCrop, onAvatarImageSelect, initAvatarCropper, drawAvatarCropper, startAvatarDrag, avatarDrag, endAvatarDrag, confirmAvatarCrop,
             rollInitiative, setCurrentActor, nextTurn, prevTurn, removeParticipant, onDragStart, onDrop,
             applyHPDelta, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
             openStatusPicker, applyStatus, removeStatus, toggleTarget, toggleSelectGroup, selectNone,
