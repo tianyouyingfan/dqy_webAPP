@@ -94,7 +94,13 @@ createApp({
         // 监听背景裁剪模态框
         watch(() => ui.imageCropper.open, (isOpen) => {
             if (isOpen) {
-                nextTick(initCropper);
+                // 使用多个nextTick确保DOM完全渲染
+                nextTick(() => {
+                    nextTick(() => {
+                        // 添加重试机制，确保DOM元素可用
+                        initCropperWithRetry();
+                    });
+                });
             } else {
                 // 当模态框关闭时，安全地重置状态
                 bgSourceImage.value = null;
@@ -104,7 +110,13 @@ createApp({
         // 监听头像裁剪模态框
         watch(() => ui.avatarCropper.open, (isOpen) => {
             if (isOpen) {
-                nextTick(initAvatarCropper);
+                // 使用多个nextTick确保DOM完全渲染
+                nextTick(() => {
+                    nextTick(() => {
+                        // 添加重试机制，确保DOM元素可用
+                        initAvatarCropperWithRetry();
+                    });
+                });
             } else {
                 // 当模态框关闭时，安全地重置状态
                 avatarSourceImage.value = null;
@@ -115,6 +127,33 @@ createApp({
             if (!damages || damages.length === 0) return '无伤害';
             return damages.map(d => `${d.dice} ${d.type}`).join(', ');
         };
+        
+        // 图片验证工具函数
+        function validateImageFile(file, isAvatar = false) {
+            // 检查文件是否存在
+            if (!file) {
+                return { valid: false, message: '没有选择文件' };
+            }
+            
+            // 检查文件类型
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                return { valid: false, message: '不支持的文件格式。请使用 JPG、PNG、GIF 或 WebP 格式的图片。' };
+            }
+            
+            // 检查文件大小
+            const maxSize = isAvatar ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // 头像5MB，背景10MB
+            if (file.size > maxSize) {
+                return { valid: false, message: `图片文件过大。请选择小于 ${isAvatar ? '5MB' : '10MB'} 的图片。` };
+            }
+            
+            // 检查文件是否为空
+            if (file.size === 0) {
+                return { valid: false, message: '图片文件为空，请选择有效的图片文件。' };
+            }
+            
+            return { valid: true };
+        }
         function formatRolledDamages(rolledDamages) {
             if (!rolledDamages || rolledDamages.length === 0) return '0';
             return rolledDamages.map(d => `${d.amount} ${d.type}`).join(' + ');
@@ -600,55 +639,168 @@ createApp({
         const avatarSourceImage = ref(null);
         function onBgImageSelect(e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
+            if (!file) {
+                return;
+            }
+            
+            // 验证文件类型
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                toast('错误：不支持的文件格式。请使用 JPG、PNG、GIF 或 WebP 格式的图片。');
+                e.target.value = '';
+                return;
+            }
+            
+            // 验证文件大小 (限制为10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                toast('错误：图片文件过大。请选择小于 10MB 的图片。');
+                e.target.value = '';
+                return;
+            }
+            
+            // 验证文件内容
+            if (file.size === 0) {
+                toast('错误：图片文件为空，请选择有效的图片文件。');
+                e.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onerror = () => {
+                console.error("文件读取失败:", file.name);
+                toast('错误：无法读取文件，请尝试其他图片。');
+                e.target.value = '';
+            };
+            
+            reader.onload = (event) => {
+                try {
+                    // 验证读取结果
+                    if (!event.target?.result) {
+                        toast('错误：图片读取失败，请重试。');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // 设置图片URL并打开裁剪器
                     ui.imageCropper.imageUrl = event.target.result;
                     ui.imageCropper.open = true;
-                };
-                reader.readAsDataURL(file);
-            }
+                } catch (error) {
+                    console.error("处理图片时发生错误:", error);
+                    toast('错误：处理图片时发生错误，请重试。');
+                    e.target.value = '';
+                }
+            };
+            
+            reader.readAsDataURL(file);
             e.target.value = '';
         }
+        // 带重试机制的背景裁剪器初始化
+        function initCropperWithRetry(retryCount = 0) {
+            const maxRetries = 5;
+            const retryDelay = 100; // 100ms
+            
+            const canvas = cropperCanvas.value;
+            const modal = cropperModal.value;
+            
+            if (!canvas || !modal) {
+                if (retryCount < maxRetries) {
+                    console.warn(`背景裁剪器DOM元素未找到，正在重试 (${retryCount + 1}/${maxRetries})`);
+                    setTimeout(() => initCropperWithRetry(retryCount + 1), retryDelay * (retryCount + 1));
+                } else {
+                    console.error("背景裁剪器Canvas未找到，已达到最大重试次数");
+                    toast("错误：裁剪器初始化失败，请刷新页面后重试。");
+                    ui.imageCropper.open = false;
+                }
+                return;
+            }
+            
+            // DOM元素已找到，继续正常初始化
+            initCropper();
+        }
+        
         function initCropper() {
             const canvas = cropperCanvas.value;
-            if (!canvas) return;
+            if (!canvas) {
+                console.error("背景裁剪器Canvas未找到");
+                toast("错误：裁剪器初始化失败，请重试。");
+                return;
+            }
+            
             const ctx = canvas.getContext('2d');
             const img = new Image();
             bgSourceImage.value = img;
+            
             img.onerror = () => {
                 console.error("背景图片加载失败:", ui.imageCropper.imageUrl);
-                toast("图片加载失败，请检查文件或重试。");
-                ui.imageCropper.open = false; // 自动关闭损坏的模态框
+                toast("图片加载失败，请检查文件格式或重试。");
+                ui.imageCropper.open = false;
             };
+            
             img.onload = () => {
-                const modalWidth = cropperModal.value?.clientWidth || 680;
-                const canvasWidth = Math.min(img.width, modalWidth - 24);
-                const scale = canvasWidth / img.width;
-                const canvasHeight = img.height * scale;
+                // 更严格的图片完整性检查
+                if (!img.complete || img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+                    toast('错误：图片文件无效或损坏，请尝试其他图片。');
+                    ui.imageCropper.open = false;
+                    return;
+                }
+                
+                // 获取模态框宽度，添加更多安全检查
+                const modalElement = cropperModal.value;
+                const modalWidth = modalElement?.clientWidth || 680;
+                
+                // 确保Canvas有最小尺寸
+                const minCanvasSize = 200;
+                const maxCanvasWidth = Math.max(minCanvasSize, modalWidth - 24);
+                const canvasWidth = Math.max(minCanvasSize, Math.min(img.naturalWidth, maxCanvasWidth));
+                
+                // 计算缩放比例和高度
+                const scale = canvasWidth / img.naturalWidth;
+                const canvasHeight = Math.max(minCanvasSize, img.naturalHeight * scale);
+                
+                // 设置Canvas尺寸
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
+                
+                // 计算裁剪框尺寸和位置
                 const boxWidth = canvasWidth * 0.8;
                 const boxHeight = boxWidth / ui.imageCropper.aspectRatio;
-                bgCropBox.x = (canvasWidth - boxWidth) / 2;
-                bgCropBox.y = (canvasHeight - boxHeight) / 2;
-                bgCropBox.width = boxWidth;
-                bgCropBox.height = boxHeight;
-                drawCropper();
+                
+                // 确保裁剪框不超出Canvas边界
+                const maxBoxHeight = canvasHeight * 0.9;
+                const finalBoxHeight = Math.min(boxHeight, maxBoxHeight);
+                const finalBoxWidth = finalBoxHeight * ui.imageCropper.aspectRatio;
+                
+                bgCropBox.x = (canvasWidth - finalBoxWidth) / 2;
+                bgCropBox.y = (canvasHeight - finalBoxHeight) / 2;
+                bgCropBox.width = finalBoxWidth;
+                bgCropBox.height = finalBoxHeight;
+                
+                // 绘制裁剪器
+                drawCropper(img);
             };
+            
+            // 设置图片源，确保URL有效
+            if (!ui.imageCropper.imageUrl) {
+                toast("错误：没有有效的图片URL");
+                ui.imageCropper.open = false;
+                return;
+            }
+            
             img.src = ui.imageCropper.imageUrl;
         }
-        function drawCropper() {
+        function drawCropper(img) {
             const canvas = cropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(bgSourceImage.value, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.clearRect(bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height);
-            ctx.drawImage(bgSourceImage.value,
-                (bgCropBox.x / canvas.width) * bgSourceImage.value.width, (bgCropBox.y / canvas.height) * bgSourceImage.value.height,
-                (bgCropBox.width / canvas.width) * bgSourceImage.value.width, (bgCropBox.height / canvas.height) * bgSourceImage.value.height,
+            ctx.drawImage(img,
+                (bgCropBox.x / canvas.width) * img.naturalWidth, (bgCropBox.y / canvas.height) * img.naturalHeight,
+                (bgCropBox.width / canvas.width) * img.naturalWidth, (bgCropBox.height / canvas.height) * img.naturalHeight,
                 bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height
             );
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
@@ -676,7 +828,7 @@ createApp({
                 const mouseY = e.clientY - rect.top;
                 bgCropBox.x = utils.clamp(mouseX - bgDragStart.x, 0, canvas.width - bgCropBox.width);
                 bgCropBox.y = utils.clamp(mouseY - bgDragStart.y, 0, canvas.height - bgCropBox.height);
-                drawCropper();
+                drawCropper(bgSourceImage.value);
             }
         }
         function endBgDrag() {
@@ -704,91 +856,233 @@ createApp({
                 const mouseY = e.clientY - rect.top;
                 avatarCropBox.x = utils.clamp(mouseX - avatarDragStart.x, 0, canvas.width - avatarCropBox.width);
                 avatarCropBox.y = utils.clamp(mouseY - avatarDragStart.y, 0, canvas.height - avatarCropBox.height);
-                drawAvatarCropper();
+                drawAvatarCropper(avatarSourceImage.value);
             }
         }
         function endAvatarDrag() {
             isAvatarDragging = false;
         }
         function confirmCrop() {
-            if (!bgSourceImage.value || !cropperCanvas.value || !bgSourceImage.value.complete || bgSourceImage.value.naturalWidth === 0) {
-                toast('错误：裁剪器未就绪或图片无效。');
+            // 更宽松的图片有效性检查
+            if (!bgSourceImage.value) {
+                toast('错误：没有选择图片，请重新上传。');
                 ui.imageCropper.open = false;
                 return;
             }
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = bgSourceImage.value.width / cropperCanvas.value.width;
-            const scaleY = bgSourceImage.value.height / cropperCanvas.value.height;
-            const sourceX = bgCropBox.x * scaleX;
-            const sourceY = bgCropBox.y * scaleY;
-            const sourceWidth = bgCropBox.width * scaleX;
-            const sourceHeight = bgCropBox.height * scaleY;
-            tempCanvas.width = sourceWidth;
-            tempCanvas.height = sourceHeight;
-            tempCtx.drawImage(bgSourceImage.value, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
             
-            // 根据当前编辑器类型设置背景图片
-            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
-            if (ui.activeEditor === 'monster') {
-                uiState.monsterDraft.backgroundImage = dataUrl;
-            } else if (ui.activeEditor === 'pc') {
-                uiState.pcDraft.backgroundImage = dataUrl;
+            if (!cropperCanvas.value) {
+                toast('错误：裁剪器未初始化，请重试。');
+                return;
             }
             
-            ui.imageCropper.open = false;
+            // 检查图片是否加载完成
+            if (!bgSourceImage.value.complete || bgSourceImage.value.naturalWidth === 0) {
+                toast('错误：图片尚未加载完成，请稍后重试。');
+                return;
+            }
+            
+            try {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // 修复缩放计算
+                const scaleX = bgSourceImage.value.naturalWidth / cropperCanvas.value.width;
+                const scaleY = bgSourceImage.value.naturalHeight / cropperCanvas.value.height;
+                
+                const sourceX = bgCropBox.x * scaleX;
+                const sourceY = bgCropBox.y * scaleY;
+                const sourceWidth = bgCropBox.width * scaleX;
+                const sourceHeight = bgCropBox.height * scaleY;
+                
+                // 确保裁剪区域有效
+                if (sourceWidth <= 0 || sourceHeight <= 0) {
+                    toast('错误：裁剪区域无效，请调整裁剪框。');
+                    return;
+                }
+                
+                tempCanvas.width = sourceWidth;
+                tempCanvas.height = sourceHeight;
+                tempCtx.drawImage(bgSourceImage.value, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+                
+                // 根据当前编辑器类型设置背景图片
+                const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+                if (ui.activeEditor === 'monster') {
+                    uiState.monsterDraft.backgroundImage = dataUrl;
+                } else if (ui.activeEditor === 'pc') {
+                    uiState.pcDraft.backgroundImage = dataUrl;
+                }
+                
+                ui.imageCropper.open = false;
+                toast('背景图片已更新');
+            } catch (error) {
+                console.error("裁剪过程中发生错误:", error);
+                toast('错误：裁剪过程中发生错误，请重试。');
+            }
         }
         function onAvatarImageSelect(e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
+            if (!file) {
+                return;
+            }
+            
+            // 验证文件类型
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                toast('错误：不支持的文件格式。请使用 JPG、PNG、GIF 或 WebP 格式的图片。');
+                e.target.value = '';
+                return;
+            }
+            
+            // 验证文件大小 (限制为5MB，头像通常较小)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                toast('错误：头像图片文件过大。请选择小于 5MB 的图片。');
+                e.target.value = '';
+                return;
+            }
+            
+            // 验证文件内容
+            if (file.size === 0) {
+                toast('错误：头像图片文件为空，请选择有效的图片文件。');
+                e.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onerror = () => {
+                console.error("头像文件读取失败:", file.name);
+                toast('错误：无法读取头像文件，请尝试其他图片。');
+                e.target.value = '';
+            };
+            
+            reader.onload = (event) => {
+                try {
+                    // 验证读取结果
+                    if (!event.target?.result) {
+                        toast('错误：头像读取失败，请重试。');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // 设置图片URL并打开裁剪器
                     ui.avatarCropper.imageUrl = event.target.result;
                     ui.avatarCropper.open = true;
-                };
-                reader.readAsDataURL(file);
-            }
+                } catch (error) {
+                    console.error("处理头像时发生错误:", error);
+                    toast('错误：处理头像时发生错误，请重试。');
+                    e.target.value = '';
+                }
+            };
+            
+            reader.readAsDataURL(file);
             e.target.value = '';
         }
+        // 带重试机制的头像裁剪器初始化
+        function initAvatarCropperWithRetry(retryCount = 0) {
+            const maxRetries = 5;
+            const retryDelay = 100; // 100ms
+            
+            const canvas = avatarCropperCanvas.value;
+            const modal = avatarCropperModal.value;
+            
+            if (!canvas || !modal) {
+                if (retryCount < maxRetries) {
+                    console.warn(`头像裁剪器DOM元素未找到，正在重试 (${retryCount + 1}/${maxRetries})`);
+                    setTimeout(() => initAvatarCropperWithRetry(retryCount + 1), retryDelay * (retryCount + 1));
+                } else {
+                    console.error("头像裁剪器Canvas未找到，已达到最大重试次数");
+                    toast("错误：头像裁剪器初始化失败，请刷新页面后重试。");
+                    ui.avatarCropper.open = false;
+                }
+                return;
+            }
+            
+            // DOM元素已找到，继续正常初始化
+            initAvatarCropper();
+        }
+        
         function initAvatarCropper() {
             const canvas = avatarCropperCanvas.value;
-            if (!canvas) return;
+            if (!canvas) {
+                console.error("头像裁剪器Canvas未找到");
+                toast("错误：头像裁剪器初始化失败，请重试。");
+                return;
+            }
+            
             const ctx = canvas.getContext('2d');
             const img = new Image();
             avatarSourceImage.value = img;
+            
             img.onerror = () => {
                 console.error("头像图片加载失败:", ui.avatarCropper.imageUrl);
-                toast("图片加载失败，请检查文件或重试。");
-                ui.avatarCropper.open = false; // 自动关闭损坏的模态框
+                toast("头像图片加载失败，请检查文件格式或重试。");
+                ui.avatarCropper.open = false;
             };
+            
             img.onload = () => {
-                const modalWidth = avatarCropperModal.value?.clientWidth || 680;
-                const canvasWidth = Math.min(img.width, modalWidth - 24);
-                const scale = canvasWidth / img.width;
-                const canvasHeight = img.height * scale;
+                // 更严格的图片完整性检查
+                if (!img.complete || img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+                    toast('错误：头像图片文件无效或损坏，请尝试其他图片。');
+                    ui.avatarCropper.open = false;
+                    return;
+                }
+                
+                // 获取模态框宽度，添加更多安全检查
+                const modalElement = avatarCropperModal.value;
+                const modalWidth = modalElement?.clientWidth || 680;
+                
+                // 确保Canvas有最小尺寸
+                const minCanvasSize = 200;
+                const maxCanvasWidth = Math.max(minCanvasSize, modalWidth - 24);
+                const canvasWidth = Math.max(minCanvasSize, Math.min(img.naturalWidth, maxCanvasWidth));
+                
+                // 计算缩放比例和高度
+                const scale = canvasWidth / img.naturalWidth;
+                const canvasHeight = Math.max(minCanvasSize, img.naturalHeight * scale);
+                
+                // 设置Canvas尺寸
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
-                const boxSize = Math.min(canvasWidth, canvasHeight) * 0.8;
-                avatarCropBox.x = (canvasWidth - boxSize) / 2;
-                avatarCropBox.y = (canvasHeight - boxSize) / 2;
-                avatarCropBox.width = boxSize;
-                avatarCropBox.height = boxSize;
-                drawAvatarCropper();
+                
+                // 计算圆形裁剪框尺寸 - 确保正方形
+                const canvasMinDimension = Math.min(canvasWidth, canvasHeight);
+                const boxSize = canvasMinDimension * 0.8;
+                
+                // 确保圆形裁剪框不超出边界
+                const maxBoxSize = canvasMinDimension * 0.9;
+                const finalBoxSize = Math.min(boxSize, maxBoxSize);
+                
+                avatarCropBox.x = (canvasWidth - finalBoxSize) / 2;
+                avatarCropBox.y = (canvasHeight - finalBoxSize) / 2;
+                avatarCropBox.width = finalBoxSize;
+                avatarCropBox.height = finalBoxSize;
+                
+                // 绘制圆形裁剪器
+                drawAvatarCropper(img);
             };
+            
+            // 设置图片源，确保URL有效
+            if (!ui.avatarCropper.imageUrl) {
+                toast("错误：没有有效的头像图片URL");
+                ui.avatarCropper.open = false;
+                return;
+            }
+            
             img.src = ui.avatarCropper.imageUrl;
         }
-        function drawAvatarCropper() {
+        function drawAvatarCropper(img) {
             const canvas = avatarCropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(avatarSourceImage.value, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.beginPath();
             ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
             ctx.clip();
-            ctx.drawImage(avatarSourceImage.value, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.restore();
             ctx.beginPath();
             ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
@@ -797,32 +1091,79 @@ createApp({
             ctx.stroke();
         }
         function confirmAvatarCrop() {
-            if (!avatarSourceImage.value || !avatarCropperCanvas.value || !avatarSourceImage.value.complete || avatarSourceImage.value.naturalWidth === 0) {
-                toast('错误：裁剪器未就绪或图片无效。');
+            // 更宽松的图片有效性检查
+            if (!avatarSourceImage.value) {
+                toast('错误：没有选择头像，请重新上传。');
                 ui.avatarCropper.open = false;
                 return;
             }
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = avatarSourceImage.value.width / avatarCropperCanvas.value.width;
-            const scaleY = avatarSourceImage.value.height / avatarCropperCanvas.value.height;
-            const sourceX = avatarCropBox.x * scaleX;
-            const sourceY = avatarCropBox.y * scaleY;
-            const sourceWidth = avatarCropBox.width * scaleX;
-            const sourceHeight = avatarCropBox.height * scaleY;
-            tempCanvas.width = sourceWidth;
-            tempCanvas.height = sourceHeight;
-            tempCtx.beginPath();
-            tempCtx.arc(sourceWidth / 2, sourceHeight / 2, sourceWidth / 2, 0, Math.PI * 2, true);
-            tempCtx.clip();
-            tempCtx.drawImage(avatarSourceImage.value, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
-            const dataUrl = tempCanvas.toDataURL('image/png');
-            if (ui.activeEditor === 'monster') {
-                uiState.monsterDraft.avatar = dataUrl;
-            } else if (ui.activeEditor === 'pc') {
-                uiState.pcDraft.avatar = dataUrl;
+            
+            if (!avatarCropperCanvas.value) {
+                toast('错误：头像裁剪器未初始化，请重试。');
+                return;
             }
-            ui.avatarCropper.open = false;
+            
+            // 检查图片是否加载完成
+            if (!avatarSourceImage.value.complete || avatarSourceImage.value.naturalWidth === 0) {
+                toast('错误：头像图片尚未加载完成，请稍后重试。');
+                return;
+            }
+            
+            try {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // 修复缩放计算
+                const scaleX = avatarSourceImage.value.naturalWidth / avatarCropperCanvas.value.width;
+                const scaleY = avatarSourceImage.value.naturalHeight / avatarCropperCanvas.value.height;
+                
+                const sourceX = avatarCropBox.x * scaleX;
+                const sourceY = avatarCropBox.y * scaleY;
+                const sourceWidth = avatarCropBox.width * scaleX;
+                const sourceHeight = avatarCropBox.height * scaleY;
+                
+                // 确保裁剪区域有效
+                if (sourceWidth <= 0 || sourceHeight <= 0) {
+                    toast('错误：头像裁剪区域无效，请调整裁剪框。');
+                    return;
+                }
+                
+                // 设置临时Canvas为正方形
+                const size = Math.min(sourceWidth, sourceHeight);
+                tempCanvas.width = size;
+                tempCanvas.height = size;
+                
+                // 创建圆形裁剪
+                tempCtx.beginPath();
+                tempCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2, true);
+                tempCtx.clip();
+                
+                // 计算居中位置
+                const offsetX = (sourceWidth - size) / 2;
+                const offsetY = (sourceHeight - size) / 2;
+                
+                // 绘制圆形头像
+                tempCtx.drawImage(
+                    avatarSourceImage.value,
+                    sourceX + offsetX, sourceY + offsetY, size, size,
+                    0, 0, size, size
+                );
+                
+                const dataUrl = tempCanvas.toDataURL('image/png');
+                
+                // 根据当前编辑器类型设置头像
+                if (ui.activeEditor === 'monster') {
+                    uiState.monsterDraft.avatar = dataUrl;
+                } else if (ui.activeEditor === 'pc') {
+                    uiState.pcDraft.avatar = dataUrl;
+                }
+                
+                ui.avatarCropper.open = false;
+                toast('头像已更新');
+            } catch (error) {
+                console.error("头像裁剪过程中发生错误:", error);
+                toast('错误：头像裁剪过程中发生错误，请重试。');
+            }
         }
 
         // Turn & Initiative
@@ -1439,8 +1780,8 @@ createApp({
             openActionEditor, openActionEditorForDraft, saveAction, addDamageToActionDraft,
             deleteAction, autoAdjustCR, resetBattle, standardizeToParticipant, addToBattleFromEditor,
             addToBattleFromMonster, addToBattleFromPC, promptAddParticipants, addParticipantsFromMonster,
-            addParticipantsFromPC, onBgImageSelect, initCropper, drawCropper, startBgDrag, bgDrag, endBgDrag,
-            confirmCrop, onAvatarImageSelect, initAvatarCropper, drawAvatarCropper, startAvatarDrag, avatarDrag, endAvatarDrag, confirmAvatarCrop,
+            addParticipantsFromPC, onBgImageSelect, initCropper, initCropperWithRetry, drawCropper, startBgDrag, bgDrag, endBgDrag,
+            confirmCrop, onAvatarImageSelect, initAvatarCropper, initAvatarCropperWithRetry, drawAvatarCropper, startAvatarDrag, avatarDrag, endAvatarDrag, confirmAvatarCrop,
             rollInitiative, setCurrentActor, nextTurn, prevTurn, removeParticipant, onDragStart, onDrop,
             applyHPDelta, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
             openStatusPicker, applyStatus, removeStatus, toggleTarget, toggleSelectGroup, selectNone,
