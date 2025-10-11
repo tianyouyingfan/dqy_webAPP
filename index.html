@@ -388,99 +388,108 @@
 
                 <!-- PC 查看模式 -->
                 <template v-if="ui.actorViewer.actor.type === 'pc'">
-                    <div class="row">
-                        <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                            <img v-if="ui.actorViewer.actor.avatar" :src="ui.actorViewer.actor.avatar" alt="Avatar"
-                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                            <span v-else>🧝</span>
-                        </div>
-                        <div class="col">
-                            <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
-                            <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC
-                                    {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill" v-else>AC <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.ac"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP
-                                    {{ui.actorViewer.actor.hpCurrent}} /
-                                    {{ui.actorViewer.actor.hpMax}}</span>
-                                <span class="pill" v-else>HP <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.hpCurrent"> /
-                                    <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.hpMax"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hl"></div>
-                    <div class="section-title">六大属性</div>
-                    <div class="ability-grid">
-                        <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
-                            <div class="muted small">{{k.toUpperCase()}}</div>
-                            <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
-                                ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
-                            <div v-else>
-                                <input type="number" class="inline-input"
-                                    v-model.number="ui.actorViewer.draft.abilities[k]">
-                                ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hl"></div>
-                    <div class="three-col">
-                        <div class="col">
-                            <div class="section-title">伤害抗性</div>
-                            <div class="muted small">{{ (ui.actorViewer.actor.resistances.damage || []).join(', ') ||
-                                '无' }}</div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">伤害易伤</div>
-                            <div class="muted small">{{ (ui.actorViewer.actor.vulnerabilities.damage || []).join(', ')
-                                || '无' }}</div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">伤害免疫</div>
-                            <div class="muted small">{{ (ui.actorViewer.actor.immunities.damage || []).join(', ') || '无'
-                                }}</div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">状态免疫</div>
-                            <div class="muted small">{{ (ui.actorViewer.actor.immunities.conditions || []).join(', ') ||
-                                '无' }}</div>
-                        </div>
-                    </div>
-                    <div class="hl"></div>
-                    <div class="section-title">特性</div>
-                    <div class="muted small"
-                        style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
-                        ui.actorViewer.actor.features || '无' }}</div>
-                    <div class="hl"></div>
-                    <div class="section-title">动作</div>
-                    <div class="grid" style="gap: 8px;">
-                        <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
-                            :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
-                            @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
+                    <div class="monster-view-container" style="position: relative;">
+                        <!-- 背景图 -->
+                        <img v-if="ui.actorViewer.actor.backgroundImage" :src="ui.actorViewer.actor.backgroundImage"
+                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                        
+                        <!-- 内容容器 -->
+                        <div style="position: relative; z-index: 2; padding: 12px;">
                             <div class="row">
-                                <div class="title">{{ a.name }}</div>
-                                <div class="spacer"></div>
-                                <span class="tag">{{ a.type }}</span>
+                                <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
+                                    <img v-if="ui.actorViewer.actor.avatar" :src="ui.actorViewer.actor.avatar" alt="Avatar"
+                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                    <span v-else>🧝</span>
+                                </div>
+                                <div class="col">
+                                    <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
+                                    <div class="kpi muted small" style="margin-top: 8px;">
+                                        <span class="pill" v-if="!ui.actorViewer.isEditing">AC
+                                            {{ui.actorViewer.actor.ac}}</span>
+                                        <span class="pill" v-else>AC <input type="number" class="inline-input"
+                                            v-model.number="ui.actorViewer.draft.ac"></span>
+                                        <span class="pill" v-if="!ui.actorViewer.isEditing">HP
+                                            {{ui.actorViewer.actor.hpCurrent}} /
+                                            {{ui.actorViewer.actor.hpMax}}</span>
+                                        <span class="pill" v-else>HP <input type="number" class="inline-input"
+                                            v-model.number="ui.actorViewer.draft.hpCurrent"> /
+                                            <input type="number" class="inline-input"
+                                            v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="muted small" style="margin-top: 6px;">
-                                <template v-if="a.type === 'attack'">
-                                    <span>攻击+{{ a.attackBonus }}</span>,
-                                    <span v-if="a.range">距离: {{ a.range }}</span>,
-                                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                </template>
-                                <template v-else-if="a.type === 'save'">
-                                    <span v-if="a.range">距离: {{ a.range }}</span>,
-                                    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                </template>
-                                <template v-else>
-                                    <span>{{ a.note || '实用能力' }}</span>
-                                </template>
+                            <div class="hl"></div>
+                            <div class="section-title">六大属性</div>
+                            <div class="ability-grid">
+                                <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
+                                    <div class="muted small">{{k.toUpperCase()}}</div>
+                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
+                                        ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                    <div v-else>
+                                        <input type="number" class="inline-input"
+                                            v-model.number="ui.actorViewer.draft.abilities[k]">
+                                        ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hl"></div>
+                            <div class="three-col">
+                                <div class="col">
+                                    <div class="section-title">伤害抗性</div>
+                                    <div class="muted small">{{ (ui.actorViewer.actor.resistances.damage || []).join(', ') ||
+                                        '无' }}</div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">伤害易伤</div>
+                                    <div class="muted small">{{ (ui.actorViewer.actor.vulnerabilities.damage || []).join(', ')
+                                        || '无' }}</div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">伤害免疫</div>
+                                    <div class="muted small">{{ (ui.actorViewer.actor.immunities.damage || []).join(', ') || '无'
+                                        }}</div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">状态免疫</div>
+                                    <div class="muted small">{{ (ui.actorViewer.actor.immunities.conditions || []).join(', ') ||
+                                        '无' }}</div>
+                                </div>
+                            </div>
+                            <div class="hl"></div>
+                            <div class="section-title">特性</div>
+                            <div class="muted small"
+                                style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
+                                ui.actorViewer.actor.features || '无' }}</div>
+                            <div class="hl"></div>
+                            <div class="section-title">动作</div>
+                            <div class="grid" style="gap: 8px;">
+                                <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
+                                    :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
+                                    @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
+                                    <div class="row">
+                                        <div class="title">{{ a.name }}</div>
+                                        <div class="spacer"></div>
+                                        <span class="tag">{{ a.type }}</span>
+                                    </div>
+                                    <div class="muted small" style="margin-top: 6px;">
+                                        <template v-if="a.type === 'attack'">
+                                            <span>攻击+{{ a.attackBonus }}</span>,
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
+                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                        </template>
+                                        <template v-else-if="a.type === 'save'">
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
+                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                        </template>
+                                        <template v-else>
+                                            <span>{{ a.note || '实用能力' }}</span>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div v-if="!ui.actorViewer.actor.actions?.length" class="placeholder small">无动作</div>
                             </div>
                         </div>
-                        <div v-if="!ui.actorViewer.actor.actions?.length" class="placeholder small">无动作</div>
                     </div>
                 </template>
 
@@ -948,95 +957,107 @@
 
                 <!-- 查看模式 -->
                 <div v-if="ui.pcEditor.mode === 'view'">
-                    <div class="row">
-                        <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                            <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
-                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                            <span v-else>🧝</span>
-                        </div>
-                        <div class="col">
-                            <h2 style="margin: 0;">{{ uiState.pcDraft.name }}</h2>
-                            <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill">AC {{uiState.pcDraft.ac}}</span>
-                                <span class="pill">HP {{uiState.pcDraft.hpCurrent}} / {{uiState.pcDraft.hpMax}}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="monster-view-container" style="position: relative;">
+                        <!-- 背景图 -->
+                        <img v-if="uiState.pcDraft.backgroundImage" :src="uiState.pcDraft.backgroundImage"
+                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
 
-                    <div class="hl"></div>
-
-                    <div class="section-title">六大属性</div>
-                    <div class="ability-grid">
-                        <div class="ability" v-for="(v,k) in uiState.pcDraft.abilities" :key="k">
-                            <div class="muted small">{{k.toUpperCase()}}</div>
-                            <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
-                        </div>
-                    </div>
-
-                    <div class="hl"></div>
-
-                    <div class="three-col">
-                        <div class="col">
-                            <div class="section-title">伤害抗性</div>
-                            <div class="muted small">{{ (uiState.pcDraft.resistances.damage || []).join(', ') || '无' }}
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">伤害易伤</div>
-                            <div class="muted small">{{ (uiState.pcDraft.vulnerabilities.damage || []).join(', ') || '无'
-                                }}</div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">伤害免疫</div>
-                            <div class="muted small">{{ (uiState.pcDraft.immunities.damage || []).join(', ') || '无' }}
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="section-title">状态免疫</div>
-                            <div class="muted small">{{ (uiState.pcDraft.immunities.conditions || []).join(', ') || '无'
-                                }}</div>
-                        </div>
-                    </div>
-
-                    <div class="hl"></div>
-                    <div class="section-title">特性</div>
-                    <div class="muted small"
-                        style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
-                        uiState.pcDraft.features || '无' }}</div>
-
-                    <div class="hl"></div>
-
-                    <div class="section-title">动作</div>
-                    <div class="grid" style="gap: 8px;">
-                        <div class="card" v-for="a in sortedPcDraftActions" :key="a.id">
+                        <!-- 内容容器 -->
+                        <div style="position: relative; z-index: 2; padding: 12px;">
                             <div class="row">
-                                <div class="title">{{ a.name }}</div>
-                                <div class="spacer"></div>
-                                <span class="tag">{{ a.type }}</span>
+                                <!-- 上传按钮 -->
+                                <input type="file" ref="pcBgUpload" @change="onBgImageSelect" accept="image/*" hidden>
+                                <button class="btn" @click="$refs.pcBgUpload.click()">上传背景</button>
+                                <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
+                                    <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
+                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                    <span v-else>🧝</span>
+                                </div>
+                                <div class="col">
+                                    <h2 style="margin: 0;">{{ uiState.pcDraft.name }}</h2>
+                                    <div class="kpi muted small" style="margin-top: 8px;">
+                                        <span class="pill">AC {{uiState.pcDraft.ac}}</span>
+                                        <span class="pill">HP {{uiState.pcDraft.hpCurrent}} / {{uiState.pcDraft.hpMax}}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="muted small" style="margin-top: 6px;">
-                                <template v-if="a.type === 'attack'">
-                                    <span>攻击+{{ a.attackBonus }}</span>,
-                                    <span v-if="a.range">距离: {{ a.range }}</span>,
-                                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                </template>
-                                <template v-else-if="a.type === 'save'">
-                                    <span v-if="a.range">距离: {{ a.range }}</span>,
-                                    <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                    <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                </template>
-                                <template v-else>
-                                    <span>{{ a.note || '实用能力' }}</span>
-                                </template>
+
+                            <div class="hl"></div>
+
+                            <div class="section-title">六大属性</div>
+                            <div class="ability-grid">
+                                <div class="ability" v-for="(v,k) in uiState.pcDraft.abilities" :key="k">
+                                    <div class="muted small">{{k.toUpperCase()}}</div>
+                                    <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                </div>
+                            </div>
+
+                            <div class="hl"></div>
+
+                            <div class="three-col">
+                                <div class="col">
+                                    <div class="section-title">伤害抗性</div>
+                                    <div class="muted small">{{ (uiState.pcDraft.resistances.damage || []).join(', ') || '无' }}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">伤害易伤</div>
+                                    <div class="muted small">{{ (uiState.pcDraft.vulnerabilities.damage || []).join(', ') || '无'
+                                        }}</div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">伤害免疫</div>
+                                    <div class="muted small">{{ (uiState.pcDraft.immunities.damage || []).join(', ') || '无' }}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="section-title">状态免疫</div>
+                                    <div class="muted small">{{ (uiState.pcDraft.immunities.conditions || []).join(', ') || '无'
+                                        }}</div>
+                                </div>
+                            </div>
+
+                            <div class="hl"></div>
+                            <div class="section-title">特性</div>
+                            <div class="muted small"
+                                style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
+                                uiState.pcDraft.features || '无' }}</div>
+
+                            <div class="hl"></div>
+
+                            <div class="section-title">动作</div>
+                            <div class="grid" style="gap: 8px;">
+                                <div class="card" v-for="a in sortedPcDraftActions" :key="a.id">
+                                    <div class="row">
+                                        <div class="title">{{ a.name }}</div>
+                                        <div class="spacer"></div>
+                                        <span class="tag">{{ a.type }}</span>
+                                    </div>
+                                    <div class="muted small" style="margin-top: 6px;">
+                                        <template v-if="a.type === 'attack'">
+                                            <span>攻击+{{ a.attackBonus }}</span>,
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
+                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                        </template>
+                                        <template v-else-if="a.type === 'save'">
+                                            <span v-if="a.range">距离: {{ a.range }}</span>,
+                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                        </template>
+                                        <template v-else>
+                                            <span>{{ a.note || '实用能力' }}</span>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div v-if="!uiState.pcDraft.actions?.length" class="placeholder small">无动作</div>
+                            </div>
+                            <div class="hl"></div>
+                            <div class="row">
+                                <button class="btn ok" @click="savePC()">保存并关闭</button>
+                                <div class="spacer"></div>
+                                <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
                             </div>
                         </div>
-                        <div v-if="!uiState.pcDraft.actions?.length" class="placeholder small">无动作</div>
-                    </div>
-                    <div class="hl"></div>
-                    <div class="row">
-                        <button class="btn ok" @click="savePC()">保存并关闭</button>
-                        <div class="spacer"></div>
-                        <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
                     </div>
                 </div>
 

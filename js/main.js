@@ -273,6 +273,7 @@ createApp({
                     actions: [], features: '',
                     resistances: { damage: [], conditions: [] }, vulnerabilities: { damage: [], conditions: [] }, immunities: { damage: [], conditions: [] },
                     isDefault: false,
+                    backgroundImage: '',
                 };
                 ui.pcEditor.mode = 'edit';
             }
@@ -663,7 +664,15 @@ createApp({
             tempCanvas.width = sourceWidth;
             tempCanvas.height = sourceHeight;
             tempCtx.drawImage(sourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
-            uiState.monsterDraft.backgroundImage = tempCanvas.toDataURL('image/jpeg', 0.9);
+            
+            // 根据当前编辑器类型设置背景图片
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+            if (ui.activeEditor === 'monster') {
+                uiState.monsterDraft.backgroundImage = dataUrl;
+            } else if (ui.activeEditor === 'pc') {
+                uiState.pcDraft.backgroundImage = dataUrl;
+            }
+            
             ui.imageCropper.open = false;
         }
         function onAvatarImageSelect(e) {

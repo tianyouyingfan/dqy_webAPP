@@ -264,7 +264,8 @@ export const uiState = reactive({
             wis: 10,
             cha: 10
         },
-        actions: []
+        actions: [],
+        backgroundImage: ''
     },
     actionDraft: { name: '', type: 'attack', damages: [], recharge: 0 },
     groupDraft: {

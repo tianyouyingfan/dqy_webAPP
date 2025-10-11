@@ -192,7 +192,8 @@ export async function seedIfEmpty() {
             cha: 12
         },
         actions: [],
-        features: '一名经验丰富的战士，忠诚可靠。'
+        features: '一名经验丰富的战士，忠诚可靠。',
+        backgroundImage: ''
     }, {
         name: '琳',
         ac: 14,
@@ -207,6 +208,7 @@ export async function seedIfEmpty() {
             cha: 10
         },
         actions: [],
-        features: '一位敏捷的游侠，擅长弓箭和野外生存。'
+        features: '一位敏捷的游侠，擅长弓箭和野外生存。',
+        backgroundImage: ''
     },]);
 }
