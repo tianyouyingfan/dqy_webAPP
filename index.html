@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0F1012">
-
+    <link rel="icon" href="./icon.ico">
 <body class="loading">
     <div class="loader"></div>
     <div id="app" class="app" v-cloak>
@@ -144,7 +144,7 @@
             <section v-if="route==='battle'">
                 <div class="battle">
                     <!-- 顶部先攻序列条: 根据状态条件渲染 -->
-                    
+
                     <!-- 查看模式 (v-if) -->
                     <div v-if="!ui.isEditingInitiative" class="initiative-bar hscroll" @dragover.prevent>
                         <div v-for="(p, idx) in battle.participants" :key="p.uid" class="init-tile"
@@ -177,7 +177,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- 编辑模式 (v-else) -->
                     <div v-else class="initiative-editor-list hscroll" @dragover.prevent>
                         <div v-for="(p, idx) in battle.participants" :key="p.uid" class="compact-tile"
@@ -397,12 +397,17 @@
                         <div class="col">
                             <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
                             <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} /
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC
+                                    {{ui.actorViewer.actor.ac}}</span>
+                                <span class="pill" v-else>AC <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.ac"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP
+                                    {{ui.actorViewer.actor.hpCurrent}} /
                                     {{ui.actorViewer.actor.hpMax}}</span>
-                                <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> /
-                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                <span class="pill" v-else>HP <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.hpCurrent"> /
+                                    <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.hpMax"></span>
                             </div>
                         </div>
                     </div>
@@ -411,9 +416,12 @@
                     <div class="ability-grid">
                         <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
                             <div class="muted small">{{k.toUpperCase()}}</div>
-                            <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                            <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
+                                ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
                             <div v-else>
-                                <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]"> ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                <input type="number" class="inline-input"
+                                    v-model.number="ui.actorViewer.draft.abilities[k]">
+                                ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
                             </div>
                         </div>
                     </div>
@@ -488,25 +496,37 @@
                                 <span class="pill mono">CR {{ui.actorViewer.actor.cr}}</span>
                             </div>
                             <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} /
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC
+                                    {{ui.actorViewer.actor.ac}}</span>
+                                <span class="pill" v-else>AC <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.ac"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP
+                                    {{ui.actorViewer.actor.hpCurrent}} /
                                     {{ui.actorViewer.actor.hpMax}}</span>
-                                <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> /
-                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">速度 {{(ui.actorViewer.actor.speed && ui.actorViewer.actor.speed.walk)
+                                <span class="pill" v-else>HP <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.hpCurrent"> /
+                                    <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                <span class="pill" v-if="!ui.actorViewer.isEditing">速度 {{(ui.actorViewer.actor.speed &&
+                                    ui.actorViewer.actor.speed.walk)
                                     || '?'}}ft</span>
-                                <span class="pill" v-else>速度 <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.speed.walk">ft</span>
-                                <span class="pill">{{ (ui.actorViewer.actor.monsterType||[]).map(translateType).join(',') || '未分类' }}</span>
+                                <span class="pill" v-else>速度 <input type="number" class="inline-input"
+                                        v-model.number="ui.actorViewer.draft.speed.walk">ft</span>
+                                <span class="pill">{{
+                                    (ui.actorViewer.actor.monsterType||[]).map(translateType).join(',') || '未分类'
+                                    }}</span>
                             </div>
                             <div class="hl"></div>
                             <div class="section-title">六大属性</div>
                             <div class="ability-grid">
                                 <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
                                     <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
+                                        ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
                                     <div v-else>
-                                        <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]"> ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                        <input type="number" class="inline-input"
+                                            v-model.number="ui.actorViewer.draft.abilities[k]">
+                                        ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
                                     </div>
                                 </div>
                             </div>
