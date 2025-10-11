@@ -90,6 +90,26 @@ createApp({
                 }
             }
         }, { deep: true });
+        
+        // 监听背景裁剪模态框
+        watch(() => ui.imageCropper.open, (isOpen) => {
+            if (isOpen) {
+                nextTick(initCropper);
+            } else {
+                // 当模态框关闭时，安全地重置状态
+                bgSourceImage.value = null;
+            }
+        });
+
+        // 监听头像裁剪模态框
+        watch(() => ui.avatarCropper.open, (isOpen) => {
+            if (isOpen) {
+                nextTick(initAvatarCropper);
+            } else {
+                // 当模态框关闭时，安全地重置状态
+                avatarSourceImage.value = null;
+            }
+        });
         // Helper functions that are part of business logic
         const formatDamages = (damages) => {
             if (!damages || damages.length === 0) return '无伤害';
@@ -571,13 +591,13 @@ createApp({
         let bgCropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
         let isBgDragging = false;
         let bgDragStart = { x: 0, y: 0 };
-        let bgSourceImage = null;
+        const bgSourceImage = ref(null);
         
         // 头像裁剪器 (Avatar Cropper) 状态
         let avatarCropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
         let isAvatarDragging = false;
         let avatarDragStart = { x: 0, y: 0 };
-        let avatarSourceImage = null;
+        const avatarSourceImage = ref(null);
         function onBgImageSelect(e) {
             const file = e.target.files[0];
             if (file) {
@@ -585,7 +605,6 @@ createApp({
                 reader.onload = (event) => {
                     ui.imageCropper.imageUrl = event.target.result;
                     ui.imageCropper.open = true;
-                    nextTick(initCropper);
                 };
                 reader.readAsDataURL(file);
             }
@@ -596,7 +615,12 @@ createApp({
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            bgSourceImage = img;
+            bgSourceImage.value = img;
+            img.onerror = () => {
+                console.error("背景图片加载失败:", ui.imageCropper.imageUrl);
+                toast("图片加载失败，请检查文件或重试。");
+                ui.imageCropper.open = false; // 自动关闭损坏的模态框
+            };
             img.onload = () => {
                 const modalWidth = cropperModal.value?.clientWidth || 680;
                 const canvasWidth = Math.min(img.width, modalWidth - 24);
@@ -618,13 +642,13 @@ createApp({
             const canvas = cropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(bgSourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bgSourceImage.value, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.clearRect(bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height);
-            ctx.drawImage(bgSourceImage,
-                (bgCropBox.x / canvas.width) * bgSourceImage.width, (bgCropBox.y / canvas.height) * bgSourceImage.height,
-                (bgCropBox.width / canvas.width) * bgSourceImage.width, (bgCropBox.height / canvas.height) * bgSourceImage.height,
+            ctx.drawImage(bgSourceImage.value,
+                (bgCropBox.x / canvas.width) * bgSourceImage.value.width, (bgCropBox.y / canvas.height) * bgSourceImage.value.height,
+                (bgCropBox.width / canvas.width) * bgSourceImage.value.width, (bgCropBox.height / canvas.height) * bgSourceImage.value.height,
                 bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height
             );
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
@@ -687,17 +711,22 @@ createApp({
             isAvatarDragging = false;
         }
         function confirmCrop() {
+            if (!bgSourceImage.value || !cropperCanvas.value || !bgSourceImage.value.complete || bgSourceImage.value.naturalWidth === 0) {
+                toast('错误：裁剪器未就绪或图片无效。');
+                ui.imageCropper.open = false;
+                return;
+            }
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = bgSourceImage.width / cropperCanvas.value.width;
-            const scaleY = bgSourceImage.height / cropperCanvas.value.height;
+            const scaleX = bgSourceImage.value.width / cropperCanvas.value.width;
+            const scaleY = bgSourceImage.value.height / cropperCanvas.value.height;
             const sourceX = bgCropBox.x * scaleX;
             const sourceY = bgCropBox.y * scaleY;
             const sourceWidth = bgCropBox.width * scaleX;
             const sourceHeight = bgCropBox.height * scaleY;
             tempCanvas.width = sourceWidth;
             tempCanvas.height = sourceHeight;
-            tempCtx.drawImage(bgSourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+            tempCtx.drawImage(bgSourceImage.value, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
             
             // 根据当前编辑器类型设置背景图片
             const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
@@ -716,7 +745,6 @@ createApp({
                 reader.onload = (event) => {
                     ui.avatarCropper.imageUrl = event.target.result;
                     ui.avatarCropper.open = true;
-                    nextTick(initAvatarCropper);
                 };
                 reader.readAsDataURL(file);
             }
@@ -727,7 +755,12 @@ createApp({
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            avatarSourceImage = img;
+            avatarSourceImage.value = img;
+            img.onerror = () => {
+                console.error("头像图片加载失败:", ui.avatarCropper.imageUrl);
+                toast("图片加载失败，请检查文件或重试。");
+                ui.avatarCropper.open = false; // 自动关闭损坏的模态框
+            };
             img.onload = () => {
                 const modalWidth = avatarCropperModal.value?.clientWidth || 680;
                 const canvasWidth = Math.min(img.width, modalWidth - 24);
@@ -748,14 +781,14 @@ createApp({
             const canvas = avatarCropperCanvas.value;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(avatarSourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(avatarSourceImage.value, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.beginPath();
             ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
             ctx.clip();
-            ctx.drawImage(avatarSourceImage, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(avatarSourceImage.value, 0, 0, canvas.width, canvas.height);
             ctx.restore();
             ctx.beginPath();
             ctx.arc(avatarCropBox.x + avatarCropBox.width / 2, avatarCropBox.y + avatarCropBox.height / 2, avatarCropBox.width / 2, 0, Math.PI * 2, true);
@@ -764,10 +797,15 @@ createApp({
             ctx.stroke();
         }
         function confirmAvatarCrop() {
+            if (!avatarSourceImage.value || !avatarCropperCanvas.value || !avatarSourceImage.value.complete || avatarSourceImage.value.naturalWidth === 0) {
+                toast('错误：裁剪器未就绪或图片无效。');
+                ui.avatarCropper.open = false;
+                return;
+            }
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
-            const scaleX = avatarSourceImage.width / avatarCropperCanvas.value.width;
-            const scaleY = avatarSourceImage.height / avatarCropperCanvas.value.height;
+            const scaleX = avatarSourceImage.value.width / avatarCropperCanvas.value.width;
+            const scaleY = avatarSourceImage.value.height / avatarCropperCanvas.value.height;
             const sourceX = avatarCropBox.x * scaleX;
             const sourceY = avatarCropBox.y * scaleY;
             const sourceWidth = avatarCropBox.width * scaleX;
@@ -777,7 +815,7 @@ createApp({
             tempCtx.beginPath();
             tempCtx.arc(sourceWidth / 2, sourceHeight / 2, sourceWidth / 2, 0, Math.PI * 2, true);
             tempCtx.clip();
-            tempCtx.drawImage(avatarSourceImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+            tempCtx.drawImage(avatarSourceImage.value, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
             const dataUrl = tempCanvas.toDataURL('image/png');
             if (ui.activeEditor === 'monster') {
                 uiState.monsterDraft.avatar = dataUrl;
