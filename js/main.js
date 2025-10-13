@@ -104,6 +104,8 @@ createApp({
             } else {
                 // 当模态框关闭时，安全地重置状态
                 bgSourceImage.value = null;
+                ui.imageCropper.imageUrl = null;
+                console.log("背景裁剪器已关闭，状态已重置");
             }
         });
 
@@ -120,6 +122,8 @@ createApp({
             } else {
                 // 当模态框关闭时，安全地重置状态
                 avatarSourceImage.value = null;
+                ui.avatarCropper.imageUrl = null;
+                console.log("头像裁剪器已关闭，状态已重置");
             }
         });
         // Helper functions that are part of business logic
@@ -685,6 +689,7 @@ createApp({
                     
                     // 设置图片URL并打开裁剪器
                     ui.imageCropper.imageUrl = event.target.result;
+                    console.log("背景图片URL已设置:", ui.imageCropper.imageUrl?.substring(0, 50) + "...");
                     ui.imageCropper.open = true;
                 } catch (error) {
                     console.error("处理图片时发生错误:", error);
@@ -732,15 +737,24 @@ createApp({
             const img = new Image();
             bgSourceImage.value = img;
             
-            img.onerror = () => {
-                console.error("背景图片加载失败:", ui.imageCropper.imageUrl);
+            img.onerror = (error) => {
+                console.error("背景图片加载失败:", ui.imageCropper.imageUrl, error);
                 toast("图片加载失败，请检查文件格式或重试。");
                 ui.imageCropper.open = false;
             };
             
+            img.onabort = () => {
+                console.warn("背景图片加载被取消:", ui.imageCropper.imageUrl);
+                toast("图片加载被取消。");
+                ui.imageCropper.open = false;
+            };
+            
             img.onload = () => {
+                console.log("背景图片加载成功，尺寸:", img.naturalWidth, "x", img.naturalHeight);
+                
                 // 更严格的图片完整性检查
                 if (!img.complete || img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+                    console.error("图片完整性检查失败:", { complete: img.complete, width: img.naturalWidth, height: img.naturalHeight });
                     toast('错误：图片文件无效或损坏，请尝试其他图片。');
                     ui.imageCropper.open = false;
                     return;
@@ -778,6 +792,7 @@ createApp({
                 bgCropBox.height = finalBoxHeight;
                 
                 // 绘制裁剪器
+                console.log("开始绘制背景裁剪器");
                 drawCropper(img);
             };
             
@@ -788,11 +803,25 @@ createApp({
                 return;
             }
             
+            console.log("开始加载背景图片，URL:", ui.imageCropper.imageUrl?.substring(0, 50) + "...");
             img.src = ui.imageCropper.imageUrl;
         }
         function drawCropper(img) {
             const canvas = cropperCanvas.value;
+            if (!canvas) {
+                console.error("drawCropper: Canvas元素未找到");
+                return;
+            }
+            
             const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error("drawCropper: 无法获取Canvas上下文");
+                return;
+            }
+            
+            console.log("drawCropper: Canvas尺寸:", canvas.width, "x", canvas.height);
+            console.log("drawCropper: 裁剪框位置:", bgCropBox);
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
@@ -806,6 +835,8 @@ createApp({
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 2;
             ctx.strokeRect(bgCropBox.x, bgCropBox.y, bgCropBox.width, bgCropBox.height);
+            
+            console.log("drawCropper: 背景裁剪器绘制完成");
         }
         // 背景裁剪器拖动事件处理器
         function startBgDrag(e) {
@@ -967,6 +998,7 @@ createApp({
                     
                     // 设置图片URL并打开裁剪器
                     ui.avatarCropper.imageUrl = event.target.result;
+                    console.log("头像图片URL已设置:", ui.avatarCropper.imageUrl?.substring(0, 50) + "...");
                     ui.avatarCropper.open = true;
                 } catch (error) {
                     console.error("处理头像时发生错误:", error);
@@ -1014,15 +1046,24 @@ createApp({
             const img = new Image();
             avatarSourceImage.value = img;
             
-            img.onerror = () => {
-                console.error("头像图片加载失败:", ui.avatarCropper.imageUrl);
+            img.onerror = (error) => {
+                console.error("头像图片加载失败:", ui.avatarCropper.imageUrl, error);
                 toast("头像图片加载失败，请检查文件格式或重试。");
                 ui.avatarCropper.open = false;
             };
             
+            img.onabort = () => {
+                console.warn("头像图片加载被取消:", ui.avatarCropper.imageUrl);
+                toast("头像图片加载被取消。");
+                ui.avatarCropper.open = false;
+            };
+            
             img.onload = () => {
+                console.log("头像图片加载成功，尺寸:", img.naturalWidth, "x", img.naturalHeight);
+                
                 // 更严格的图片完整性检查
                 if (!img.complete || img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+                    console.error("头像图片完整性检查失败:", { complete: img.complete, width: img.naturalWidth, height: img.naturalHeight });
                     toast('错误：头像图片文件无效或损坏，请尝试其他图片。');
                     ui.avatarCropper.open = false;
                     return;
@@ -1059,6 +1100,7 @@ createApp({
                 avatarCropBox.height = finalBoxSize;
                 
                 // 绘制圆形裁剪器
+                console.log("开始绘制头像裁剪器");
                 drawAvatarCropper(img);
             };
             
@@ -1069,11 +1111,25 @@ createApp({
                 return;
             }
             
+            console.log("开始加载头像图片，URL:", ui.avatarCropper.imageUrl?.substring(0, 50) + "...");
             img.src = ui.avatarCropper.imageUrl;
         }
         function drawAvatarCropper(img) {
             const canvas = avatarCropperCanvas.value;
+            if (!canvas) {
+                console.error("drawAvatarCropper: Canvas元素未找到");
+                return;
+            }
+            
             const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error("drawAvatarCropper: 无法获取Canvas上下文");
+                return;
+            }
+            
+            console.log("drawAvatarCropper: Canvas尺寸:", canvas.width, "x", canvas.height);
+            console.log("drawAvatarCropper: 裁剪框位置:", avatarCropBox);
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
@@ -1089,6 +1145,8 @@ createApp({
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 2;
             ctx.stroke();
+            
+            console.log("drawAvatarCropper: 头像裁剪器绘制完成");
         }
         function confirmAvatarCrop() {
             // 更宽松的图片有效性检查
